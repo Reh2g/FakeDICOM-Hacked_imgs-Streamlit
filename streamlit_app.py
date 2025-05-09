@@ -15,7 +15,7 @@ def load_image(img):
 st.title("Fake-DICOM: Uso de redes neurais profundas para avaliar se a combinação de algoritmos de criptografia com transformadas temporais aumenta a segurança de imagens DICOM contra tentativas intrusão maliciosas")
 st.header("Envie um exame médico qualquer .jpg ou .png", divider="gray")
 
-Model_CNN = tf.keras.models.load_model('model_fold_1.keras')
+Model_CNN = tf.keras.models.load_model('./model_fold_1.keras')
 
 for layer in Model_CNN.keras.layers:
     layer.trainable = False
