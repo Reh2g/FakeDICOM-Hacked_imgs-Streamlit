@@ -3,3 +3,9 @@ tensorflow
 matplotlib
 numpy
 opencv-python-headless
+PIL
+pandas
+cv2
+pycryptodome
+io
+time
