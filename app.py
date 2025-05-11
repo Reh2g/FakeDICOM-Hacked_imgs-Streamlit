@@ -196,7 +196,7 @@ if arquivo_imagem:
         st.subheader("Escolha uma opção par posicionar a anomalia:")
         col1, col2, col3, col4 = st.columns(4)
 
-        if col1.button("Superior Esquerdo"):
+        if col1.button("Superior Esquerdo"): # DAR UM JEITO DE CHAMAR A CNN PRA CADA UMA DESSAS OPÇÕES (JÁ TEM O FSHIFT E A IMAGEM)
             col_central = st.columns([1, 2, 1])[1]
             with col_central:
                 st.image(freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=0), caption="Imagem Alterada", width=300)
