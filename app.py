@@ -87,23 +87,25 @@ def ifft(fshift):
     imagem_restaurada_uint8 = cv2.normalize(imagem_restaurada, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     return imagem_restaurada_uint8
 # ----------------- INTERFACE -----------------
+# Carrega a imagem de um arquivo local
+image = Image.open("banner.jpg")
+st.image(image, use_container_width =True)
 
-st.title("Fake-DICOM")
-st.header("Detecção de Anomalias em Imagens Médicas")
-st.subheader("Análise de Imagens Médicas com Streamlit")
+st.title("Fake-DICOM: Detecção de Anomalias em Imagens Médicas")
 
 # ----- ESTATÍSTICAS -----
-st.subheader("Estatísticas da Criptografia AES - Último teste realizado: 11/05/2025")
+st.subheader("Estatísticas da Criptografia")
+st.caption("Último teste realizado com o algoritmo AES para geração de estatísticas: 10/05/2025")
 df = pd.read_excel(r'C:\Users\CarlosChinen\OneDrive\Main\FEI\TCC\Streamlit\cripto.xlsx')
 st.dataframe(df.describe())
 
-fig, ax = plt.subplots(figsize=(12, 8))
+fig, ax = plt.subplots(figsize=(12, 5))
 ax.plot(df['slice'], df['tempoExecucaoAES'], color='blue')
-ax.set_title('Gráfico de Execução do AES')
+ax.set_title('Execução da Criptografia por Slice - 1799 Slices')
 ax.set_xticks([])
-ax.tick_params(axis='y', labelsize=8)
-ax.set_xlabel('Slice', fontsize=8)
-ax.set_ylabel('Tempo de Execução (s)', fontsize=8)
+ax.tick_params(axis='y', labelsize=10)
+ax.set_xlabel('Slice', fontsize=10)
+ax.set_ylabel('Tempo de Execução (s)', fontsize=10)
 ax.legend(['Tempo de Execução'])
 st.pyplot(fig)
 
@@ -123,6 +125,7 @@ if arquivo_imagem:
     mag_spec = 20 * np.log(np.abs(fshift) + 1)
     mag_spec_norm = cv2.normalize(mag_spec, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
 
+    st.success("Imagem carregada com sucesso e Transformada para o domínio da frequência!")
     col1, col2 = st.columns(2)
     with col1:
         st.image(imagem, caption="Imagem carregada", use_container_width=True)
@@ -136,7 +139,7 @@ if arquivo_imagem:
     if 'aes_key' not in st.session_state:
         st.session_state.aes_key = get_random_bytes(32)
 
-    st.markdown('<h4>🔑 Sua chave de Criptografia AES:</h4>', unsafe_allow_html=True)
+    st.markdown('<h4>🔑 Sua chave de Criptografia AES (salve):</h4>', unsafe_allow_html=True)
     st.code(st.session_state.aes_key.hex(), language="text")
 
     st.download_button("🔑 Baixar Chave de Criptografia", st.session_state.aes_key, "aes_key.pem", "application/octet-stream")
@@ -150,7 +153,7 @@ if arquivo_imagem:
         st.session_state.tempo_cripto = tempo
 
     if 'cripto' in st.session_state:
-        st.markdown('<h4>🔒 30 primeiros bytes do arquivo criptografado::</h4>', unsafe_allow_html=True)
+        st.markdown('<h4>🔒 30 primeiros bytes do arquivo criptografado (salve):</h4>', unsafe_allow_html=True)
         st.code(st.session_state.cripto.getvalue()[:30], language="text")
 
         st.download_button("🗃️ Baixar Arquivo Criptografado (.enc)", st.session_state.cripto, "imagem_criptografada.enc", "application/octet-stream")
@@ -166,16 +169,19 @@ if arquivo_imagem:
     st.markdown('<h4>🗃️ Insira o Arquivo Criptografado</h4>', unsafe_allow_html=True)
     enc_file = st.file_uploader("Arquivo Criptografado", type=["enc"])
 
+
     if chave_descript and enc_file:
-        fshift_restaurado, tempo_decript = descriptografar_imagem(chave_descript, enc_file)
-        st.success(f"✅ Descriptografia concluída em {tempo_decript:.4f} segundos.")
+        try:
+            fshift_restaurado, tempo_decript = descriptografar_imagem(chave_descript, enc_file)
+            st.success(f"✅ Descriptografia concluída em {tempo_decript:.4f} segundos.")
 
 
-        col_central = st.columns([1, 2, 1])[1]  # Cria três colunas e usa a do meio
-        with col_central:
-            st.subheader('Imagem Restaurada!')
-            st.image(ifft(fshift_restaurado), width=300)
-
+            col_central = st.columns([1, 2, 1])[1]  # Cria três colunas e usa a do meio
+            with col_central:
+                st.subheader('Imagem Restaurada!')
+                st.image(ifft(fshift_restaurado), width=300)
+        except Exception as e:
+            st.error(f"❌ Erro na descriptografia: {e}")
 
     st.divider()
 
