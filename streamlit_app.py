@@ -11,12 +11,7 @@ import cv2
 import io
 import time
 
-def carregar_modelo():
-    return tf.keras.models.load_model(
-        'model_MobileNet.keras',
-        compile=False,
-        safe_mode=False  # Desativa verificações extras
-    )
+MobileNet = tf.keras.models.load_model('model_MobileNet.keras')
 
 # ----------------- FUNÇÕES -----------------
 def preprocessar_imagem(imagem):
@@ -249,7 +244,6 @@ if arquivo_imagem:
 # ----- INICIAR CNN -----
     if 'cnn_ativa' not in st.session_state:
         st.session_state.cnn_ativa = False
-        st.session_state.modelo = carregar_modelo()
 
     if st.button("Iniciar CNN"):
         st.session_state.cnn_ativa = True
@@ -279,11 +273,11 @@ if arquivo_imagem:
                 
                 img_processada = preprocessar_imagem(img_alterada)
                 
-                predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
-                classe = np.argmax(predicao)
-                confianca = predicao[0][classe]
+                predict = MobileNet.predict(img_processada[np.newaxis, ...])
+                classe = np.argmax(predict)
+                confianca = predict[0][classe]
                 
-                heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
+                heatmap = gerar_heatmap(MobileNet, img_processada)
                 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
