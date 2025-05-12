@@ -109,7 +109,7 @@ ax.set_ylabel('Tempo de Execução (s)', fontsize=10)
 ax.legend(['Tempo de Execução'])
 st.pyplot(fig)
 
-st.divider()
+st.markdown("---")
 
 # ----- UPLOAD DE IMAGEM -----
 st.title("Upload de Imagem PNG")
@@ -132,8 +132,7 @@ if arquivo_imagem:
     with col2:
         st.image(mag_spec_norm, caption="Espectro Gerado", use_container_width=True)
 
-    st.divider()
-
+    st.markdown("---")
     # ----- CRIPTOGRAFIA -----
     st.header("🔐 Criptografia AES!")
     if 'aes_key' not in st.session_state:
@@ -144,8 +143,7 @@ if arquivo_imagem:
 
     st.download_button("🔑 Baixar Chave de Criptografia", st.session_state.aes_key, "aes_key.pem", "application/octet-stream")
     
-    st.divider()
-
+    st.markdown("---")
     st.markdown('### ▶️ Executar!')
     if st.button("🔒 Executar Criptografia"):
         cripto, tempo = criptografar_imagem(fshift, st.session_state.aes_key)
@@ -159,8 +157,7 @@ if arquivo_imagem:
         st.download_button("🗃️ Baixar Arquivo Criptografado (.enc)", st.session_state.cripto, "imagem_criptografada.enc", "application/octet-stream")
         st.success(f"✅ Criptografia concluída em {st.session_state.tempo_cripto:.4f} segundos.")
 
-    st.divider()
-
+    st.markdown("---")
     # ----- DESCRIPTOGRAFIA -----
     st.header("🔓 Descriptografia AES!")
     st.markdown('<h4>🔑 Insira a Chave para Descriptografia</h4>', unsafe_allow_html=True)
@@ -183,8 +180,7 @@ if arquivo_imagem:
         except Exception as e:
             st.error(f"❌ Erro na descriptografia: {e}")
 
-    st.divider()
-
+    st.markdown("---")
     # ----- INICIAR CNN -----
     if 'cnn_ativa' not in st.session_state:
         st.session_state.cnn_ativa = False
@@ -221,3 +217,8 @@ if arquivo_imagem:
             col_central = st.columns([1, 2, 1])[1]
             with col_central:
                 st.image(freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=3), caption="Imagem Alterada", width=300)
+    
+st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
+st.caption("TCC - Ciência da Computação - FEI")
+st.caption("Projeto desenvolvido por Carlos M. H. Chinen, Gabriel N. Missima, Vinicius A. Pedro")
+st.caption("Orientador: Prof. Dr. Paulo Sérgio")
