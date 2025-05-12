@@ -1,5 +1,6 @@
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
+from keras.layers import Lambda
 from PIL import Image
 
 import streamlit as st
