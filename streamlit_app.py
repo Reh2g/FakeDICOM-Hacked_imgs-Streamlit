@@ -11,13 +11,27 @@ import cv2
 import io
 import time
 
-MobileNet = tf.keras.models.load_model('model_MobileNet.keras')
+@st.cache_resource
+def carregar_modelo():
+    # Função compatível com a Lambda do modelo
+    def expand_channels(x):
+        return tf.stack([x[..., 0]]*3, axis=-1)
+    
+    # Carrega com mapeamento de camadas customizadas
+    return tf.keras.models.load_model(
+        'model_MobileNet.keras',
+        custom_objects={
+            'expand_channels': expand_channels,
+            'channel_expander': Lambda(expand_channels)
+        }
+    )
 
 # ----------------- FUNÇÕES -----------------
 def preprocessar_imagem(imagem):
     img = cv2.resize(imagem, (224, 224))
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)  # Conversão explícita para 3 canais
     img = img.astype('float32') / 255.0
-    return np.expand_dims(img, axis=-1)
+    return img
 
 def freq_spec(fshift, image, threshold=5, add_noise=True, corner=0):
     fshift = fshift.copy()
@@ -244,6 +258,7 @@ if arquivo_imagem:
 # ----- INICIAR CNN -----
     if 'cnn_ativa' not in st.session_state:
         st.session_state.cnn_ativa = False
+        st.session_state.modelo = carregar_modelo()
 
     if st.button("Iniciar CNN"):
         st.session_state.cnn_ativa = True
@@ -273,11 +288,11 @@ if arquivo_imagem:
                 
                 img_processada = preprocessar_imagem(img_alterada)
                 
-                predict = MobileNet.predict(img_processada[np.newaxis, ...])
-                classe = np.argmax(predict)
-                confianca = predict[0][classe]
+                predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
+                classe = np.argmax(predicao)
+                confianca = predicao[0][classe]
                 
-                heatmap = gerar_heatmap(MobileNet, img_processada)
+                heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
                 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
