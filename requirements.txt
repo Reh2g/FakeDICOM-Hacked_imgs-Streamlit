@@ -6,5 +6,5 @@ pandas
 pycryptodome
 Python-IO
 TIME-python
-PIL
+pillow
 opencv-python-headless
