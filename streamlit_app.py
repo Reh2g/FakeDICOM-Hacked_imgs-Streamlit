@@ -143,6 +143,7 @@ def ifft(fshift):
     return imagem_restaurada_uint8
 
 # ----------------- INTERFACE -----------------
+st.caption("Nikato Productions")
 # Carrega a imagem de um arquivo local
 image = Image.open("banner.jpg")
 st.image(image, use_container_width =True)
