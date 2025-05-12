@@ -11,7 +11,6 @@ import cv2
 import io
 import time
 
-@st.cache_resource
 def carregar_modelo():
     # Função compatível com a Lambda do modelo
     def expand_channels(x):
