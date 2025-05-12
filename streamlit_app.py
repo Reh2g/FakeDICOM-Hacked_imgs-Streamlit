@@ -87,11 +87,10 @@ def ifft(fshift):
     imagem_restaurada_uint8 = cv2.normalize(imagem_restaurada, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     return imagem_restaurada_uint8
 # ----------------- INTERFACE -----------------
+st.caption("Nikato Productions")
 # Carrega a imagem de um arquivo local
 image = Image.open("banner.jpg")
 st.image(image, use_container_width =True)
-
-st.caption("Nikato Productions")
 
 st.title("Fake-DICOM: Detecção de Anomalias em Imagens Médicas")
 
