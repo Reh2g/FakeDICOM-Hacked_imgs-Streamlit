@@ -3,7 +3,6 @@ tensorflow
 matplotlib
 numpy
 pandas
-cv2
 pycryptodome
 io
 time
