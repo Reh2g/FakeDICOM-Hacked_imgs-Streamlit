@@ -13,9 +13,16 @@ import time
 
 @st.cache_resource
 def carregar_modelo():
-    return tf.keras.models.load_model('model_MobileNet.keras')
-
-modelo = carregar_modelo()
+    try:
+        # Força o carregamento com formato Keras v3
+        return tf.keras.models.load_model(
+            'model_MobileNet.keras',
+            compile=False,
+            safe_mode=False  # Desativa verificações extras
+        )
+    except Exception as e:
+        st.error(f"Falha crítica ao carregar modelo: {str(e)}")
+        st.stop()
 
 # ----------------- FUNÇÕES -----------------
 def preprocessar_imagem(imagem):
@@ -62,7 +69,6 @@ def freq_spec(fshift, image, threshold=5, add_noise=True, corner=0):
 def gerar_heatmap(model, sample_image):
     sample_image_exp = np.expand_dims(sample_image, axis=0)
     
-    # Obter a última camada convolucional
     camadas_conv = [layer.name for layer in model.layers if isinstance(layer, tf.keras.layers.Conv2D)]
     ultima_conv = camadas_conv[-1] if camadas_conv else None
     
@@ -150,7 +156,6 @@ def ifft(fshift):
 
 # ----------------- INTERFACE -----------------
 st.caption("Nikato Productions")
-# Carrega a imagem de um arquivo local
 image = Image.open("banner.jpg")
 st.image(image, use_container_width =True)
 
