@@ -11,7 +11,6 @@ import cv2
 import io
 import time
 
-@st.cache_resource
 def carregar_modelo():
     return tf.keras.models.load_model(
         'model_MobileNet.keras',
