@@ -17,12 +17,12 @@ def carregar_modelo():
     def expand_channels(x):
         return tf.stack([x[..., 0]]*3, axis=-1)
     
-    # Carrega com mapeamento de camadas customizadas
+    # Carrega com mapeamento correto da Lambda
     return tf.keras.models.load_model(
         'model_MobileNet.keras',
         custom_objects={
             'expand_channels': expand_channels,
-            'channel_expander': Lambda(expand_channels)
+            'Lambda': Lambda  # Adiciona a classe Lambda aqui
         }
     )
 
