@@ -13,16 +13,11 @@ import time
 
 @st.cache_resource
 def carregar_modelo():
-    try:
-        # Força o carregamento com formato Keras v3
-        return tf.keras.models.load_model(
-            'model_MobileNet.keras',
-            compile=False,
-            safe_mode=False  # Desativa verificações extras
-        )
-    except Exception as e:
-        st.error(f"Falha crítica ao carregar modelo: {str(e)}")
-        st.stop()
+    return tf.keras.models.load_model(
+        'model_MobileNet.keras',
+        compile=False,
+        safe_mode=False  # Desativa verificações extras
+    )
 
 # ----------------- FUNÇÕES -----------------
 def preprocessar_imagem(imagem):
