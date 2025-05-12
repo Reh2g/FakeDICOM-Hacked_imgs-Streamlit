@@ -16,6 +16,11 @@ def carregar_modelo():
 modelo = carregar_modelo()
 
 # ----------------- FUNÇÕES -----------------
+def preprocessar_imagem(imagem):
+    img = cv2.resize(imagem, (224, 224))
+    img = img.astype('float32') / 255.0
+    return np.expand_dims(img, axis=-1)
+
 def freq_spec(fshift, image, threshold=5, add_noise=True, corner=0):
     fshift = fshift.copy()
     if add_noise:
@@ -118,7 +123,6 @@ def criptografar_imagem(fshift, aes_key):
     fim = time.perf_counter()
     return out_buffer, fim - inicio
 
-
 def descriptografar_imagem(chave, arquivo):
     inicio = time.perf_counter()
     chave.seek(0)
@@ -143,6 +147,7 @@ def ifft(fshift):
     return imagem_restaurada_uint8
 
 # ----------------- INTERFACE -----------------
+st.caption("Nikato Productions")
 # Carrega a imagem de um arquivo local
 image = Image.open("banner.jpg")
 st.image(image, use_container_width =True)
@@ -243,55 +248,55 @@ if arquivo_imagem:
 # ----- INICIAR CNN -----
     if 'cnn_ativa' not in st.session_state:
         st.session_state.cnn_ativa = False
+        st.session_state.modelo = carregar_modelo()
 
     if st.button("Iniciar CNN"):
         st.session_state.cnn_ativa = True
 
     if st.session_state.cnn_ativa:
+        st.subheader("🔍 Análise de Segurança com MobileNet")
+        
         col1, col2 = st.columns(2)
         with col1:
-            st.image(imagem, caption="Imagem carregada", use_container_width=True)
+            st.image(imagem, caption="Imagem Original", use_container_width=True)
         with col2:
-            st.image(mag_spec_norm, caption="Espectro Gerado", use_container_width=True)
+            st.image(mag_spec_norm, caption="Espectro de Frequência", use_container_width=True)
 
-        st.subheader("Escolha uma opção para posicionar a anomalia:")
-        col1, col2, col3, col4 = st.columns(4)
+        st.markdown("### 🎯 Simular Ataque em Região Específica")
+        cols = st.columns(4)
+        corners = {
+            "Superior Esquerdo": 0,
+            "Superior Direito": 1,
+            "Inferior Esquerdo": 2,
+            "Inferior Direito": 3
+        }
 
-        def processar_e_exibir(corner):
-            modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=corner)
-            imagem_alterada = ifft(modified_fshift)
-            
-            # Processar imagem para o modelo
-            img_processada = cv2.resize(imagem_alterada, (224, 224))
-            img_processada = img_processada.astype('float32') / 255.0
-            img_processada = np.expand_dims(img_processada, axis=-1)
-            
-            # Predição
-            predicao = modelo.predict(np.expand_dims(img_processada, axis=0))
-            classe = np.argmax(predicao)
-            confianca = predicao[0][classe]
-            
-            # Gerar heatmap
-            heatmap = gerar_heatmap(modelo, img_processada)
-            
-            # Exibir resultados
-            col_central = st.columns([1, 2, 1])[1]
-            with col_central:
-                st.image(imagem_alterada, caption="Imagem Alterada", width=300)
-                st.image(mag_spec, caption="Espectro Modificado", use_container_width=True)
-                status = "Normal ✅" if classe == 0 else "Hackeada ⚠️"
-                st.subheader(f"Status: {status}")
-                st.write(f"Confiança: {confianca*100:.2f}%")
-                st.image(heatmap, caption="Mapa de Ativação", use_container_width=True)
-
-        if col1.button("Superior Esquerdo"):
-            processar_e_exibir(0)
-        if col2.button("Inferior Esquerdo"):
-            processar_e_exibir(2)
-        if col3.button("Superior Direito"):
-            processar_e_exibir(1)
-        if col4.button("Inferior Direito"):
-            processar_e_exibir(3)
+        for i, (label, corner) in enumerate(corners.items()):
+            if cols[i].button(label):
+                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=corner)
+                img_alterada = ifft(modified_fshift)
+                
+                img_processada = preprocessar_imagem(img_alterada)
+                
+                predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
+                classe = np.argmax(predicao)
+                confianca = predicao[0][classe]
+                
+                heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
+                
+                st.markdown("---")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.image(img_alterada, caption="Imagem Modificada")
+                with col2:
+                    st.image(mag_spec, caption="Espectro Alterado")
+                with col3:
+                    st.image(heatmap, caption="Mapa de Ativação")
+                
+                st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
+                          f"(Confiança: {confianca*100:.2f}%)")
+                
+                st.markdown("---")
     
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
