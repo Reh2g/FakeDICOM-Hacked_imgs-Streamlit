@@ -4,7 +4,7 @@ matplotlib
 numpy
 pandas
 pycryptodome
-io
+Python-IO
 time
 PIL
 opencv-python-headless
