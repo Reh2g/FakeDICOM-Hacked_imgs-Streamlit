@@ -9,6 +9,12 @@ from Crypto.Random import get_random_bytes
 import io
 import time
 
+@st.cache_resource
+def carregar_modelo():
+    return tf.keras.models.load_model('model_MobileNet.keras')
+
+modelo = carregar_modelo()
+
 # ----------------- FUNÇÕES -----------------
 def freq_spec(fshift, image, threshold=5, add_noise=True, corner=0):
     fshift = fshift.copy()
@@ -46,6 +52,55 @@ def freq_spec(fshift, image, threshold=5, add_noise=True, corner=0):
     magnitude_spectrum_norm = cv2.normalize(magnitude_spectrum, None, 0, 255, cv2.NORM_MINMAX)
     return magnitude_spectrum_norm.astype(np.uint8)
 
+def gerar_heatmap(model, sample_image):
+    sample_image_exp = np.expand_dims(sample_image, axis=0)
+    
+    # Obter a última camada convolucional
+    camadas_conv = [layer.name for layer in model.layers if isinstance(layer, tf.keras.layers.Conv2D)]
+    ultima_conv = camadas_conv[-1] if camadas_conv else None
+    
+    intermediate_model = tf.keras.models.Model(inputs=model.input, outputs=model.get_layer(ultima_conv).output)
+    activations = intermediate_model.predict(sample_image_exp)
+    activations = tf.convert_to_tensor(activations)
+
+    predictions = model.predict(sample_image_exp)
+
+    with tf.GradientTape() as tape:
+        iterate = tf.keras.models.Model([model.input], [model.output, model.get_layer(ultima_conv).output])
+        model_out, last_conv_layer = iterate(sample_image_exp)
+        class_out = model_out[:, np.argmax(model_out[0])]
+        tape.watch(last_conv_layer)
+        grads = tape.gradient(class_out, last_conv_layer)
+
+    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+    pooled_grads = tf.where(pooled_grads == 0, tf.ones_like(pooled_grads) * 1e-10, pooled_grads)
+    
+    heatmap = tf.reduce_mean(tf.multiply(pooled_grads, last_conv_layer[0]), axis=-1)
+
+    min_value = np.min(heatmap)
+    max_value = np.max(heatmap)
+    heatmap = (heatmap - min_value) / (max_value - min_value)
+    heatmap = np.asarray(heatmap)
+    heatmap = (heatmap - 1) * (-1)
+
+    heatmap_resized = cv2.resize(heatmap, (sample_image.shape[1], sample_image.shape[0]))
+    heatmap_resized = np.uint8(255 * heatmap_resized)
+    
+    heatmap_colored = matplotlib.cm.jet(heatmap_resized)[:, :, :3]
+    heatmap_colored = np.uint8(heatmap_colored * 255)
+    
+    alpha_channel = np.uint8(heatmap_resized)
+    heatmap_colored_with_alpha = np.dstack((heatmap_colored, alpha_channel))
+    
+    sample_image_uint8 = np.uint8(255 * np.squeeze(sample_image))
+    image_rgb = cv2.cvtColor(sample_image_uint8, cv2.COLOR_GRAY2RGB)
+    image_rgba = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2RGBA)
+    
+    alpha_factor = alpha_channel / 255.0
+    for c in range(0, 3):
+        image_rgba[..., c] = image_rgba[..., c] * (1 - alpha_factor) + heatmap_colored[..., c] * alpha_factor
+    
+    return image_rgba
 
 def criptografar_imagem(fshift, aes_key):
     inicio = time.perf_counter()
@@ -86,6 +141,7 @@ def ifft(fshift):
     imagem_restaurada = np.abs(np.fft.ifft2(np.fft.ifftshift(fshift)))
     imagem_restaurada_uint8 = cv2.normalize(imagem_restaurada, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     return imagem_restaurada_uint8
+
 # ----------------- INTERFACE -----------------
 # Carrega a imagem de um arquivo local
 image = Image.open("banner.jpg")
@@ -133,7 +189,8 @@ if arquivo_imagem:
         st.image(mag_spec_norm, caption="Espectro Gerado", use_container_width=True)
 
     st.markdown("---")
-    # ----- CRIPTOGRAFIA -----
+
+# ----- CRIPTOGRAFIA -----
     st.header("🔐 Criptografia AES!")
     if 'aes_key' not in st.session_state:
         st.session_state.aes_key = get_random_bytes(32)
@@ -158,7 +215,8 @@ if arquivo_imagem:
         st.success(f"✅ Criptografia concluída em {st.session_state.tempo_cripto:.4f} segundos.")
 
     st.markdown("---")
-    # ----- DESCRIPTOGRAFIA -----
+
+# ----- DESCRIPTOGRAFIA -----
     st.header("🔓 Descriptografia AES!")
     st.markdown('<h4>🔑 Insira a Chave para Descriptografia</h4>', unsafe_allow_html=True)
     chave_descript = st.file_uploader("Chave", type=["pem"])
@@ -181,7 +239,8 @@ if arquivo_imagem:
             st.error(f"❌ Erro na descriptografia: {e}")
 
     st.markdown("---")
-    # ----- INICIAR CNN -----
+    
+# ----- INICIAR CNN -----
     if 'cnn_ativa' not in st.session_state:
         st.session_state.cnn_ativa = False
 
@@ -195,28 +254,44 @@ if arquivo_imagem:
         with col2:
             st.image(mag_spec_norm, caption="Espectro Gerado", use_container_width=True)
 
-        st.subheader("Escolha uma opção par posicionar a anomalia:")
+        st.subheader("Escolha uma opção para posicionar a anomalia:")
         col1, col2, col3, col4 = st.columns(4)
 
-        if col1.button("Superior Esquerdo"): # DAR UM JEITO DE CHAMAR A CNN PRA CADA UMA DESSAS OPÇÕES (JÁ TEM O FSHIFT E A IMAGEM)
+        def processar_e_exibir(corner):
+            modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=corner)
+            imagem_alterada = ifft(modified_fshift)
+            
+            # Processar imagem para o modelo
+            img_processada = cv2.resize(imagem_alterada, (224, 224))
+            img_processada = img_processada.astype('float32') / 255.0
+            img_processada = np.expand_dims(img_processada, axis=-1)
+            
+            # Predição
+            predicao = modelo.predict(np.expand_dims(img_processada, axis=0))
+            classe = np.argmax(predicao)
+            confianca = predicao[0][classe]
+            
+            # Gerar heatmap
+            heatmap = gerar_heatmap(modelo, img_processada)
+            
+            # Exibir resultados
             col_central = st.columns([1, 2, 1])[1]
             with col_central:
-                st.image(freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=0), caption="Imagem Alterada", width=300)
+                st.image(imagem_alterada, caption="Imagem Alterada", width=300)
+                st.image(mag_spec, caption="Espectro Modificado", use_container_width=True)
+                status = "Normal ✅" if classe == 0 else "Hackeada ⚠️"
+                st.subheader(f"Status: {status}")
+                st.write(f"Confiança: {confianca*100:.2f}%")
+                st.image(heatmap, caption="Mapa de Ativação", use_container_width=True)
 
+        if col1.button("Superior Esquerdo"):
+            processar_e_exibir(0)
         if col2.button("Inferior Esquerdo"):
-            col_central = st.columns([1, 2, 1])[1]
-            with col_central:
-                st.image(freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=2), caption="Imagem Alterada", width=300)
-
+            processar_e_exibir(2)
         if col3.button("Superior Direito"):
-            col_central = st.columns([1, 2, 1])[1]
-            with col_central:
-                st.image(freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=1), caption="Imagem Alterada", width=300)
-
+            processar_e_exibir(1)
         if col4.button("Inferior Direito"):
-            col_central = st.columns([1, 2, 1])[1]
-            with col_central:
-                st.image(freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=3), caption="Imagem Alterada", width=300)
+            processar_e_exibir(3)
     
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
