@@ -4,6 +4,7 @@ matplotlib
 numpy
 pandas
 pycryptodome
+openpyxl
 Python-IO
 TIME-python
 pillow
