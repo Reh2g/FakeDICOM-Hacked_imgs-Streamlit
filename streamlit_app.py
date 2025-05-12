@@ -91,6 +91,8 @@ def ifft(fshift):
 image = Image.open("banner.jpg")
 st.image(image, use_container_width =True)
 
+st.caption("Nikato Productions")
+
 st.title("Fake-DICOM: Detecção de Anomalias em Imagens Médicas")
 
 # ----- ESTATÍSTICAS -----
