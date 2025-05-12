@@ -113,7 +113,7 @@ st.markdown("---")
 
 # ----- UPLOAD DE IMAGEM -----
 st.title("Upload de Imagem PNG")
-arquivo_imagem = st.file_uploader("Escolha um arquivo PNG", type=["png"])
+arquivo_imagem = st.file_uploader("Escolha um arquivo PNG para ser analisado", type=["png"])
 
 if arquivo_imagem:
     imagem_upload = Image.open(arquivo_imagem)
