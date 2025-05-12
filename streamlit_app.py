@@ -96,7 +96,7 @@ st.title("Fake-DICOM: Detecção de Anomalias em Imagens Médicas")
 # ----- ESTATÍSTICAS -----
 st.subheader("Estatísticas da Criptografia")
 st.caption("Último teste realizado com o algoritmo AES para geração de estatísticas: 10/05/2025")
-df = pd.read_excel(r'C:\Users\CarlosChinen\OneDrive\Main\FEI\TCC\Streamlit\cripto.xlsx')
+df = pd.read_excel('cripto.xlsx')
 st.dataframe(df.describe())
 
 fig, ax = plt.subplots(figsize=(12, 5))
