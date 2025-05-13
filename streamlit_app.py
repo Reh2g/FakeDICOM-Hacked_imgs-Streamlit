@@ -219,6 +219,7 @@ if arquivo_imagem:
     st.markdown('### ▶️ Executar!')
     if st.button("🔒 Executar Criptografia"):
         cripto, tempo = criptografar_imagem(fshift, st.session_state.aes_key)
+        st.success(f"✅ Criptografia concluída em {st.session_state.tempo_cripto:.4f} segundos.")
         st.session_state.cripto = cripto
         st.session_state.tempo_cripto = tempo
 
@@ -227,7 +228,6 @@ if arquivo_imagem:
         st.code(st.session_state.cripto.getvalue()[:30], language="text")
 
         st.download_button("🗃️ Baixar Arquivo Criptografado (.enc)", st.session_state.cripto, "imagem_criptografada.enc", "application/octet-stream")
-        st.success(f"✅ Criptografia concluída em {st.session_state.tempo_cripto:.4f} segundos.")
 
     st.markdown("---")
 
