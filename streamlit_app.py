@@ -237,10 +237,12 @@ if arquivo_imagem:
     col1, col2 = st.columns(2)
     with col1:
         # st.markdown('<h4>🔑 Insira a Chave para Descriptografia</h4>', unsafe_allow_html=True)
+        st.text("🔑 Insira a Chave para Descriptografia")
         chave_descript = st.file_uploader("", type=["pem"], key="chave")
 
     with col2:
         # st.markdown('<h4>🗃️ Insira o Arquivo Criptografado</h4>', unsafe_allow_html=True)
+        st.text("🗃️ Insira o Arquivo Criptografado")
         enc_file = st.file_uploader("", type=["enc"], key="arquivo")
 
 
