@@ -164,6 +164,7 @@ image = Image.open("banner.jpg")
 st.image(image, use_container_width =True)
 
 st.markdown('<h1 style="text-align: center;">Fake-DICOM: Detecção de Anomalias em Imagens Médicas</h1>', unsafe_allow_html=True)
+st.markdown("---")
 
 # ----- ESTATÍSTICAS -----
 st.subheader("Estatísticas da Criptografia")
