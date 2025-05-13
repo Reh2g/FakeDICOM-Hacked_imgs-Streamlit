@@ -307,3 +307,4 @@ st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
 st.caption("Projeto desenvolvido por Gabriel N. Missima, Vinicius A. Pedro, Carlos M. H. Chinen")
 st.caption("Orientador: Prof. Dr. Paulo Sérgio")
+fdsafafs
