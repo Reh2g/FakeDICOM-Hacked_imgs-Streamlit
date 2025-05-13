@@ -251,12 +251,9 @@ if arquivo_imagem:
     st.markdown("---")
     
 # ----- INICIAR CNN -----
-    if 'modelo' not in st.session_state:
-        st.session_state.modelo = carregar_modelo()
-    
     if 'cnn_ativa' not in st.session_state:
         st.session_state.cnn_ativa = False
-#       st.session_state.modelo = carregar_modelo()
+        st.session_state.modelo = carregar_modelo()
 
     if st.button("Iniciar CNN"):
         st.session_state.cnn_ativa = True
