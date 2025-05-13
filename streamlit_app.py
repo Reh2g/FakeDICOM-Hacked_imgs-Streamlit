@@ -158,6 +158,10 @@ def ifft(fshift):
     return imagem_restaurada_uint8
 
 # ----------------- INTERFACE -----------------
+st.set_page_config(layout="wide")
+st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
+st.markdown('<h1 style="text-align: center;">Fake-DICOM</h1>', unsafe_allow_html=True)
+
 st.caption("Nikato Productions")
 image = Image.open("banner.jpg")
 st.image(image, use_container_width =True)
