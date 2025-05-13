@@ -233,11 +233,15 @@ if arquivo_imagem:
 
 # ----- DESCRIPTOGRAFIA -----
     st.header("🔓 Descriptografia AES!")
-    st.markdown('<h4>🔑 Insira a Chave para Descriptografia</h4>', unsafe_allow_html=True)
-    chave_descript = st.file_uploader("Chave", type=["pem"])
 
-    st.markdown('<h4>🗃️ Insira o Arquivo Criptografado</h4>', unsafe_allow_html=True)
-    enc_file = st.file_uploader("Arquivo Criptografado", type=["enc"])
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown('<h4>🔑 Insira a Chave para Descriptografia</h4>', unsafe_allow_html=True)
+        chave_descript = st.file_uploader("Chave", type=["pem"], key="chave")
+
+    with col2:
+        st.markdown('<h4>🗃️ Insira o Arquivo Criptografado</h4>', unsafe_allow_html=True)
+        enc_file = st.file_uploader("Arquivo Criptografado", type=["enc"], key="arquivo")
 
 
     if chave_descript and enc_file:
