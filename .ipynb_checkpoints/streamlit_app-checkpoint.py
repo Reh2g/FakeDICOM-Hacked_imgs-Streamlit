@@ -13,12 +13,17 @@ import cv2
 import io
 import time
 
+# ----------------- FUNÇÃO EXPAND_CHANNELS GLOBAL -----------------
+def expand_channels(x):
+    return tf.stack([x[..., 0]]*3, axis=-1)
+
+# ----------------- CARREGAMENTO DO MODELO ATUALIZADO -----------------
 def carregar_modelo():
-    def expand_channels(x):
-        return tf.stack([x[..., 0]]*3, axis=-1)
-    
-    with CustomObjectScope({'channel_expander': expand_channels}):
-        return tf.keras.models.load_model('model_MobileNet.keras')
+    return tf.keras.models.load_model(
+        'model_MobileNet.keras',
+        custom_objects={'tf': tf, '<lambda>': expand_channels},
+        safe_mode=False
+    )
 
 # ----------------- FUNÇÕES -----------------
 def preprocessar_imagem(imagem):
