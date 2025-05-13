@@ -253,10 +253,14 @@ if arquivo_imagem:
 # ----- INICIAR CNN -----
     if 'cnn_ativa' not in st.session_state:
         st.session_state.cnn_ativa = False
+
+    if 'modelo' not in st.session_state and st.session_state.cnn_ativa:
         st.session_state.modelo = carregar_modelo()
 
     if st.button("Iniciar CNN"):
         st.session_state.cnn_ativa = True
+        if 'modelo' not in st.session_state:
+            st.session_state.modelo = carregar_modelo()
 
     if st.session_state.cnn_ativa:
         st.subheader("🔍 Análise de Segurança com MobileNet")
@@ -307,4 +311,3 @@ st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
 st.caption("Projeto desenvolvido por Gabriel N. Missima, Vinicius A. Pedro, Carlos M. H. Chinen")
 st.caption("Orientador: Prof. Dr. Paulo Sérgio")
-fdsafafs
