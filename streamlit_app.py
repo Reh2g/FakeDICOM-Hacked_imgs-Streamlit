@@ -17,7 +17,7 @@ def carregar_modelo():
     def expand_channels(x):
         return tf.stack([x[..., 0]]*3, axis=-1)
     
-    with CustomObjectScope({'expand_channels': expand_channels}):
+    with CustomObjectScope({'channel_expander': expand_channels}):
         return tf.keras.models.load_model('model_MobileNet.keras')
 
 # ----------------- FUNÇÕES -----------------
