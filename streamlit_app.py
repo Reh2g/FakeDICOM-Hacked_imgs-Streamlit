@@ -17,12 +17,12 @@ def carregar_modelo():
     def expand_channels(x):
         return tf.stack([x[..., 0]]*3, axis=-1)
     
-    # Carrega com mapeamento correto da Lambda
+    # Carrega com mapeamento correto usando o nome da camada
     return tf.keras.models.load_model(
         'model_MobileNet.keras',
         custom_objects={
             'expand_channels': expand_channels,
-            'Lambda': Lambda  # Adiciona a classe Lambda aqui
+            'channel_expander': expand_channels  # Usar o nome da camada Lambda
         }
     )
 
@@ -310,5 +310,5 @@ if arquivo_imagem:
     
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
-st.caption("Projeto desenvolvido por Carlos M. H. Chinen, Gabriel N. Missima, Vinicius A. Pedro")
+st.caption("Projeto desenvolvido por Gabriel N. Missima, Vinicius A. Pedro, Carlos M. H. Chinen")
 st.caption("Orientador: Prof. Dr. Paulo Sérgio")
