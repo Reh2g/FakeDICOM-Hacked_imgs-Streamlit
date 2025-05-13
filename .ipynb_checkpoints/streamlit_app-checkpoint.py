@@ -61,7 +61,8 @@ def freq_spec(fshift, image, threshold=5, add_noise=True, corner=0):
 
     magnitude_spectrum = 20 * np.log(np.abs(fshift) + 1)
     magnitude_spectrum_norm = cv2.normalize(magnitude_spectrum, None, 0, 255, cv2.NORM_MINMAX)
-    return magnitude_spectrum_norm.astype(np.uint8)
+
+    return fshift, magnitude_spectrum_norm.astype(np.uint8)
 
 def gerar_heatmap(model, sample_image):
     sample_image_exp = np.expand_dims(sample_image, axis=0)
