@@ -1,6 +1,7 @@
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from keras.layers import Lambda
+from keras.utils import CustomObjectScope
 from PIL import Image
 
 import streamlit as st
@@ -13,23 +14,16 @@ import io
 import time
 
 def carregar_modelo():
-    # Função compatível com a Lambda do modelo
     def expand_channels(x):
         return tf.stack([x[..., 0]]*3, axis=-1)
     
-    # Carrega com mapeamento correto usando o nome da camada
-    return tf.keras.models.load_model(
-        'model_MobileNet.keras',
-        custom_objects={
-            'expand_channels': expand_channels,
-            'channel_expander': expand_channels  # Usar o nome da camada Lambda
-        }
-    )
+    with CustomObjectScope({'expand_channels': expand_channels}):
+        return tf.keras.models.load_model('model_MobileNet.keras')
 
 # ----------------- FUNÇÕES -----------------
 def preprocessar_imagem(imagem):
     img = cv2.resize(imagem, (224, 224))
-    img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)  # Conversão explícita para 3 canais
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     img = img.astype('float32') / 255.0
     return img
 
