@@ -255,7 +255,9 @@ if arquivo_imagem:
         st.session_state.cnn_ativa = False
 
     if 'modelo' not in st.session_state and st.session_state.cnn_ativa:
-        st.session_state.modelo = carregar_modelo()
+        with st.spinner("Carregando o modelo..."):
+            st.session_state.modelo = carregar_modelo()
+
 
     if st.button("Iniciar CNN"):
         st.session_state.cnn_ativa = True
