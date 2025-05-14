@@ -261,12 +261,18 @@ if arquivo_imagem:
 # ----- INICIAR CNN -----
     if 'cnn_ativa' not in st.session_state:
         st.session_state.cnn_ativa = False
-        st.session_state.modelo = carregar_modelo()
-
+        st.session_state.modelo = None
+    
     if st.button("Iniciar CNN"):
-        st.session_state.cnn_ativa = True
-
-    if st.session_state.cnn_ativa:
+        try:
+            st.session_state.modelo = carregar_modelo()
+            st.session_state.cnn_ativa = True
+            st.success("Modelo carregado com sucesso!")
+        except Exception as e:
+            st.error(f"Erro ao carregar modelo: {str(e)}")
+            st.session_state.cnn_ativa = False
+    
+    if st.session_state.cnn_ativa and st.session_state.modelo:
         st.subheader("🔍 Análise de Segurança com MobileNet")
         
         col1, col2 = st.columns(2)
@@ -286,30 +292,31 @@ if arquivo_imagem:
 
         for i, (label, corner) in enumerate(corners.items()):
             if cols[i].button(label):
-                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=corner)
-                img_alterada = ifft(modified_fshift)
-                
-                img_processada = preprocessar_imagem(img_alterada)
-                
-                predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
-                classe = np.argmax(predicao)
-                confianca = predicao[0][classe]
-                
-                heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
-                
-                st.markdown("---")
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.image(img_alterada, caption="Imagem Modificada")
-                with col2:
-                    st.image(mag_spec, caption="Espectro Alterado")
-                with col3:
-                    st.image(heatmap, caption="Mapa de Ativação")
-                
-                st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
-                          f"(Confiança: {confianca*100:.2f}%)")
-                
-                st.markdown("---")
+                if st.session_state.modelo is not None:
+                    modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=corner)
+                    img_alterada = ifft(modified_fshift)
+                    
+                    img_processada = preprocessar_imagem(img_alterada)
+                    
+                    predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
+                    classe = np.argmax(predicao)
+                    confianca = predicao[0][classe]
+                    
+                    heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
+                    
+                    st.markdown("---")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.image(img_alterada, caption="Imagem Modificada")
+                    with col2:
+                        st.image(mag_spec, caption="Espectro Alterado")
+                    with col3:
+                        st.image(heatmap, caption="Mapa de Ativação")
+                    
+                    st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
+                              f"(Confiança: {confianca*100:.2f}%)")
+                    
+                    st.markdown("---")
     
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
