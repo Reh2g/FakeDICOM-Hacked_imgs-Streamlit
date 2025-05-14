@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-import gdown
 import cv2
 import io
 import time
@@ -34,22 +33,19 @@ import os
 # ----------------- MODELO -----------------
 
 def carregar_modelo():
-    url = "https://drive.google.com/file/d/1-KSQsMxxfrbqtGpvHYl1VeArL6EZnscu/view?usp=drive_link"
-    output = "model_MobileNet.keras"
+    model_path = 'model_MobileNet.keras'
     
-    if not os.path.exists(output):
-        with st.spinner("Baixando modelo (≈2min)..."):
-            gdown.download(url, output, quiet=False)
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Modelo não encontrado em: {os.path.abspath(model_path)}")
+
+    def expand_channels(x):
+        return tf.stack([x[..., 0]]*3, axis=-1)
     
-    try:
-        return tf.keras.models.load_model(
-            output,
-            custom_objects={'expand_channels': lambda x: tf.stack([x[...,0]]*3, axis=-1)},
-            safe_mode=False
-        )
-    except Exception as e:
-        st.error(f"Falha crítica: {str(e)}")
-        st.stop()
+    return tf.keras.models.load_model(
+        model_path,
+        custom_objects={'expand_channels': expand_channels},
+        safe_mode=False
+    )
 
 # ----------------- FUNÇÕES -----------------
 def preprocessar_imagem(imagem):
