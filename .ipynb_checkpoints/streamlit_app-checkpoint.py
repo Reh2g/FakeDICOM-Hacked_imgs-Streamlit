@@ -25,10 +25,10 @@ import os
 #         st.write(f"- {os.path.join(root, file)}")
 
 # Verificação específica do modelo
-# model_path = os.path.join(current_dir, "model_MobileNet.keras")
-# st.write(f"Caminho absoluto do modelo: {model_path}")
-# st.write(f"Existe? {os.path.exists(model_path)}")
-# st.write(f"É arquivo? {os.path.isfile(model_path)}")
+model_path = os.path.join(current_dir, "model_MobileNet.keras")
+st.write(f"Caminho absoluto do modelo: {model_path}")
+st.write(f"Existe? {os.path.exists(model_path)}")
+st.write(f"É arquivo? {os.path.isfile(model_path)}")
 
 # ----------------- MODELO -----------------
 
