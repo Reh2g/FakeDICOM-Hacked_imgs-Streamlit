@@ -9,3 +9,4 @@ Python-IO
 TIME-python
 pillow
 opencv-python-headless
+os
