@@ -14,13 +14,21 @@ import io
 import time
 import os
 
-# ----------------- TESTES -----------------
+# Verificação completa do diretório
+current_dir = os.getcwd()
+st.write(f"Diretório atual: {current_dir}")
 
-model_path = os.path.abspath('model_MobileNet.keras')
-st.write(f"Verificando modelo em: {model_path}")
-st.write(f"Arquivo existe? {os.path.exists(model_path)}")
+# Listar TODOS os arquivos
+st.write("Conteúdo do diretório:")
+for root, dirs, files in os.walk(current_dir):
+    for file in files:
+        st.write(f"- {os.path.join(root, file)}")
+
+# Verificação específica do modelo
+model_path = os.path.join(current_dir, "model_MobileNet.keras")
+st.write(f"Caminho absoluto do modelo: {model_path}")
+st.write(f"Existe? {os.path.exists(model_path)}")
 st.write(f"É arquivo? {os.path.isfile(model_path)}")
-st.write(f"Permissões: {oct(os.stat(model_path).st_mode)[-3:]}")
 
 # ----------------- MODELO -----------------
 
