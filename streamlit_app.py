@@ -12,6 +12,7 @@ import tensorflow as tf
 import cv2
 import io
 import time
+import os
 
 def carregar_modelo():
     model_path = 'model_MobileNet.keras'
