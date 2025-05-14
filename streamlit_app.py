@@ -8,7 +8,8 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import cv2
 import io
 import time
@@ -107,7 +108,7 @@ def gerar_heatmap(model, sample_image):
     heatmap_resized = cv2.resize(heatmap, (sample_image.shape[1], sample_image.shape[0]))
     heatmap_resized = np.uint8(255 * heatmap_resized)
     
-    heatmap_colored = matplotlib.cm.jet(heatmap_resized)[:, :, :3]
+    heatmap_colored = cm.jet(heatmap_resized)[:, :, :3]
     heatmap_colored = np.uint8(heatmap_colored * 255)
     
     alpha_channel = np.uint8(heatmap_resized)
@@ -175,7 +176,7 @@ st.caption("Último teste realizado com o algoritmo AES para geração de estat�
 df = pd.read_excel('cripto.xlsx')
 st.dataframe(df.describe())
 
-fig, ax = matplotlib.pyplot.subplots(figsize=(12, 5))
+fig, ax = plt.subplots(figsize=(12, 5))
 ax.plot(df['slice'], df['tempoExecucaoAES'], color='blue')
 ax.set_title('Execução da Criptografia por Slice - 1799 Slices')
 ax.set_xticks([])
