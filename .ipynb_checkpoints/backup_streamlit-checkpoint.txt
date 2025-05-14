@@ -5,10 +5,11 @@ from keras.utils import CustomObjectScope
 from PIL import Image
 
 import streamlit as st
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import cv2
 import io
 import time
@@ -107,7 +108,7 @@ def gerar_heatmap(model, sample_image):
     heatmap_resized = cv2.resize(heatmap, (sample_image.shape[1], sample_image.shape[0]))
     heatmap_resized = np.uint8(255 * heatmap_resized)
     
-    heatmap_colored = plt.cm.jet(heatmap_resized)[:, :, :3]
+    heatmap_colored = cm.jet(heatmap_resized)[:, :, :3]
     heatmap_colored = np.uint8(heatmap_colored * 255)
     
     alpha_channel = np.uint8(heatmap_resized)
@@ -249,7 +250,6 @@ if arquivo_imagem:
         try:
             fshift_restaurado, tempo_decript = descriptografar_imagem(chave_descript, enc_file)
             st.success(f"✅ Descriptografia concluída em {tempo_decript:.4f} segundos.")
-
 
             col_central = st.columns([1, 2, 1])[1]  # Cria três colunas e usa a do meio
             with col_central:
