@@ -10,4 +10,4 @@ TIME-python
 pillow
 opencv-python-headless
 os
-gdown
+gdown==4.7.1
