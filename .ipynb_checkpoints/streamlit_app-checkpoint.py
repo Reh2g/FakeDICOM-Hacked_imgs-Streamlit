@@ -14,6 +14,7 @@ import io
 import time
 import os
 
+'''
 # Verificação completa do diretório
 current_dir = os.getcwd()
 st.write(f"Diretório atual: {current_dir}")
@@ -29,23 +30,27 @@ model_path = os.path.join(current_dir, "model_MobileNet.keras")
 st.write(f"Caminho absoluto do modelo: {model_path}")
 st.write(f"Existe? {os.path.exists(model_path)}")
 st.write(f"É arquivo? {os.path.isfile(model_path)}")
+'''
 
 # ----------------- MODELO -----------------
 
 def carregar_modelo():
-    model_path = 'model_MobileNet.keras'
+    url = "https://drive.google.com/file/d/1-KSQsMxxfrbqtGpvHYl1VeArL6EZnscu/view?usp=drive_link"
+    output = "model_MobileNet.keras"
     
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Modelo não encontrado em: {os.path.abspath(model_path)}")
-
-    def expand_channels(x):
-        return tf.stack([x[..., 0]]*3, axis=-1)
+    if not os.path.exists(output):
+        with st.spinner("Baixando modelo (≈2min)..."):
+            gdown.download(url, output, quiet=False)
     
-    return tf.keras.models.load_model(
-        model_path,
-        custom_objects={'expand_channels': expand_channels},
-        safe_mode=False
-    )
+    try:
+        return tf.keras.models.load_model(
+            output,
+            custom_objects={'expand_channels': lambda x: tf.stack([x[...,0]]*3, axis=-1)},
+            safe_mode=False
+        )
+    except Exception as e:
+        st.error(f"Falha crítica: {str(e)}")
+        st.stop()
 
 # ----------------- FUNÇÕES -----------------
 def preprocessar_imagem(imagem):
