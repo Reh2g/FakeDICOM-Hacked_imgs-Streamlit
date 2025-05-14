@@ -14,11 +14,19 @@ import io
 import time
 
 def carregar_modelo():
+    model_path = 'model_MobileNet.keras'
+    
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Modelo não encontrado em: {os.path.abspath(model_path)}")
+
     def expand_channels(x):
         return tf.stack([x[..., 0]]*3, axis=-1)
     
-    with CustomObjectScope({'expand_channels': expand_channels}):
-        return tf.keras.models.load_model('model_MobileNet.keras', safe_mode=False)
+    return tf.keras.models.load_model(
+        model_path,
+        custom_objects={'expand_channels': expand_channels},
+        safe_mode=False
+    )
 
 # ----------------- FUNÇÕES -----------------
 def preprocessar_imagem(imagem):
