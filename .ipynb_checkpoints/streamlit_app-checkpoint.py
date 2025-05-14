@@ -9,28 +9,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import gdown
 import cv2
 import io
 import time
 import os
 
-'''
 # Verificação completa do diretório
-current_dir = os.getcwd()
-st.write(f"Diretório atual: {current_dir}")
+# current_dir = os.getcwd()
+# st.write(f"Diretório atual: {current_dir}")
 
 # Listar TODOS os arquivos
-st.write("Conteúdo do diretório:")
-for root, dirs, files in os.walk(current_dir):
-    for file in files:
-        st.write(f"- {os.path.join(root, file)}")
+# st.write("Conteúdo do diretório:")
+# for root, dirs, files in os.walk(current_dir):
+#     for file in files:
+#         st.write(f"- {os.path.join(root, file)}")
 
 # Verificação específica do modelo
-model_path = os.path.join(current_dir, "model_MobileNet.keras")
-st.write(f"Caminho absoluto do modelo: {model_path}")
-st.write(f"Existe? {os.path.exists(model_path)}")
-st.write(f"É arquivo? {os.path.isfile(model_path)}")
-'''
+# model_path = os.path.join(current_dir, "model_MobileNet.keras")
+# st.write(f"Caminho absoluto do modelo: {model_path}")
+# st.write(f"Existe? {os.path.exists(model_path)}")
+# st.write(f"É arquivo? {os.path.isfile(model_path)}")
 
 # ----------------- MODELO -----------------
 
