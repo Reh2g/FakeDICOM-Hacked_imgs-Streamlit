@@ -153,11 +153,13 @@ def ifft(fshift):
     return imagem_restaurada_uint8
 
 # ----------------- INTERFACE -----------------
+st.set_page_config(layout="wide")
 st.caption("Nikato Productions")
 image = Image.open("banner.jpg")
 st.image(image, use_container_width =True)
 
-st.title("Fake-DICOM: Detecção de Anomalias em Imagens Médicas")
+st.markdown('<h1 style="text-align: center;">Fake-DICOM: Detecção de Anomalias em Imagens Médicas</h1>', unsafe_allow_html=True)
+st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 
 # ----- ESTATÍSTICAS -----
 st.subheader("Estatísticas da Criptografia")
@@ -214,6 +216,7 @@ if arquivo_imagem:
     st.markdown('### ▶️ Executar!')
     if st.button("🔒 Executar Criptografia"):
         cripto, tempo = criptografar_imagem(fshift, st.session_state.aes_key)
+        st.success(f"✅ Criptografia concluída em {st.session_state.tempo_cripto:.4f} segundos.")
         st.session_state.cripto = cripto
         st.session_state.tempo_cripto = tempo
 
@@ -222,17 +225,22 @@ if arquivo_imagem:
         st.code(st.session_state.cripto.getvalue()[:30], language="text")
 
         st.download_button("🗃️ Baixar Arquivo Criptografado (.enc)", st.session_state.cripto, "imagem_criptografada.enc", "application/octet-stream")
-        st.success(f"✅ Criptografia concluída em {st.session_state.tempo_cripto:.4f} segundos.")
 
     st.markdown("---")
 
 # ----- DESCRIPTOGRAFIA -----
     st.header("🔓 Descriptografia AES!")
-    st.markdown('<h4>🔑 Insira a Chave para Descriptografia</h4>', unsafe_allow_html=True)
-    chave_descript = st.file_uploader("Chave", type=["pem"])
 
-    st.markdown('<h4>🗃️ Insira o Arquivo Criptografado</h4>', unsafe_allow_html=True)
-    enc_file = st.file_uploader("Arquivo Criptografado", type=["enc"])
+    col1, col2 = st.columns(2)
+    with col1:
+        # st.markdown('<h4>🔑 Insira a Chave para Descriptografia</h4>', unsafe_allow_html=True)
+        st.text("🔑 Insira a Chave para Descriptografia")
+        chave_descript = st.file_uploader("", type=["pem"], key="chave")
+
+    with col2:
+        # st.markdown('<h4>🗃️ Insira o Arquivo Criptografado</h4>', unsafe_allow_html=True)
+        st.text("🗃️ Insira o Arquivo Criptografado")
+        enc_file = st.file_uploader("", type=["enc"], key="arquivo")
 
 
     if chave_descript and enc_file:
