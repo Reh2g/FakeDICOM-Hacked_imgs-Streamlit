@@ -175,7 +175,7 @@ st.caption("Último teste realizado com o algoritmo AES para geração de estat�
 df = pd.read_excel('cripto.xlsx')
 st.dataframe(df.describe())
 
-fig, ax = plt.subplots(figsize=(12, 5))
+fig, ax = matplotlib.pyplot.subplots(figsize=(12, 5))
 ax.plot(df['slice'], df['tempoExecucaoAES'], color='blue')
 ax.set_title('Execução da Criptografia por Slice - 1799 Slices')
 ax.set_xticks([])
