@@ -14,6 +14,16 @@ import io
 import time
 import os
 
+# ----------------- TESTES -----------------
+
+model_path = os.path.abspath('model_MobileNet.keras')
+st.write(f"Verificando modelo em: {model_path}")
+st.write(f"Arquivo existe? {os.path.exists(model_path)}")
+st.write(f"É arquivo? {os.path.isfile(model_path)}")
+st.write(f"Permissões: {oct(os.stat(model_path).st_mode)[-3:]}")
+
+# ----------------- MODELO -----------------
+
 def carregar_modelo():
     model_path = 'model_MobileNet.keras'
     
