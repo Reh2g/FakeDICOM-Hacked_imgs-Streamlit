@@ -251,7 +251,6 @@ if arquivo_imagem:
             fshift_restaurado, tempo_decript = descriptografar_imagem(chave_descript, enc_file)
             st.success(f"✅ Descriptografia concluída em {tempo_decript:.4f} segundos.")
 
-
             col_central = st.columns([1, 2, 1])[1]  # Cria três colunas e usa a do meio
             with col_central:
                 st.subheader('Imagem Restaurada!')
