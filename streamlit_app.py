@@ -5,10 +5,10 @@ from keras.utils import CustomObjectScope
 from PIL import Image
 
 import streamlit as st
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import matplotlib
 import cv2
 import io
 import time
@@ -107,7 +107,7 @@ def gerar_heatmap(model, sample_image):
     heatmap_resized = cv2.resize(heatmap, (sample_image.shape[1], sample_image.shape[0]))
     heatmap_resized = np.uint8(255 * heatmap_resized)
     
-    heatmap_colored = plt.cm.jet(heatmap_resized)[:, :, :3]
+    heatmap_colored = matplotlib.cm.jet(heatmap_resized)[:, :, :3]
     heatmap_colored = np.uint8(heatmap_colored * 255)
     
     alpha_channel = np.uint8(heatmap_resized)
