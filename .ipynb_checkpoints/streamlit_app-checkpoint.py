@@ -78,13 +78,12 @@ def freq_spec(fshift, image, threshold=5, add_noise=True, corner=0):
 
 def gerar_heatmap(model, sample_image):
     sample_image_exp = np.expand_dims(sample_image, axis=0)
-    
+
     camadas_conv = [layer.name for layer in model.layers if isinstance(layer, tf.keras.layers.Conv2D)]
     ultima_conv = camadas_conv[-1] if camadas_conv else None
-    
+
     intermediate_model = tf.keras.models.Model(inputs=model.input, outputs=model.get_layer(ultima_conv).output)
     activations = intermediate_model.predict(sample_image_exp)
-    activations = tf.convert_to_tensor(activations)
 
     predictions = model.predict(sample_image_exp)
 
@@ -97,32 +96,32 @@ def gerar_heatmap(model, sample_image):
 
     pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
     pooled_grads = tf.where(pooled_grads == 0, tf.ones_like(pooled_grads) * 1e-10, pooled_grads)
-    
-    heatmap = tf.reduce_mean(tf.multiply(pooled_grads, last_conv_layer[0]), axis=-1)
 
-    min_value = np.min(heatmap)
-    max_value = np.max(heatmap)
-    heatmap = (heatmap - min_value) / (max_value - min_value)
-    heatmap = np.asarray(heatmap)
-    heatmap = (heatmap - 1) * (-1)
+    heatmap = tf.reduce_mean(tf.multiply(pooled_grads, last_conv_layer[0]), axis=-1)
+    heatmap = heatmap.numpy()
+    heatmap = np.maximum(heatmap, 0)
+    heatmap /= np.max(heatmap) + 1e-10
 
     heatmap_resized = cv2.resize(heatmap, (sample_image.shape[1], sample_image.shape[0]))
     heatmap_resized = np.uint8(255 * heatmap_resized)
-    
+
     heatmap_colored = cm.jet(heatmap_resized)[:, :, :3]
     heatmap_colored = np.uint8(heatmap_colored * 255)
-    
+
     alpha_channel = np.uint8(heatmap_resized)
     heatmap_colored_with_alpha = np.dstack((heatmap_colored, alpha_channel))
-    
+
     sample_image_uint8 = np.uint8(255 * np.squeeze(sample_image))
-    image_rgb = cv2.cvtColor(sample_image_uint8, cv2.COLOR_GRAY2RGB)
+    if len(sample_image_uint8.shape) == 2 or sample_image_uint8.shape[-1] == 1:
+        image_rgb = cv2.cvtColor(sample_image_uint8, cv2.COLOR_GRAY2RGB)
+    else:
+        image_rgb = sample_image_uint8
     image_rgba = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2RGBA)
-    
+
     alpha_factor = alpha_channel / 255.0
     for c in range(0, 3):
         image_rgba[..., c] = image_rgba[..., c] * (1 - alpha_factor) + heatmap_colored[..., c] * alpha_factor
-    
+
     return image_rgba
 
 def criptografar_imagem(fshift, aes_key):
