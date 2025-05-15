@@ -294,25 +294,25 @@ if arquivo_imagem:
                 
                 img_processada = preprocessar_imagem(img_alterada)
                 
-                predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
-                classe = np.argmax(predicao)
-                confianca = predicao[0][classe]
+#               predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
+#               classe = np.argmax(predicao)
+#               confianca = predicao[0][classe]
                 
-                heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
-                
-                st.markdown("---")
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.image(img_alterada, caption="Imagem Modificada")
-                with col2:
-                    st.image(mag_spec, caption="Espectro Alterado")
-                with col3:
-                    st.image(heatmap, caption="Mapa de Ativação")
-                
-                st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
-                          f"(Confiança: {confianca*100:.2f}%)")
+#               heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
                 
                 st.markdown("---")
+#               col1, col2, col3 = st.columns(3)
+#               with col1:
+#                   st.image(img_alterada, caption="Imagem Modificada")
+#               with col2:
+#                   st.image(mag_spec, caption="Espectro Alterado")
+#               with col3:
+#                   st.image(heatmap, caption="Mapa de Ativação")
+                
+#               st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
+#                         f"(Confiança: {confianca*100:.2f}%)")
+                
+#               st.markdown("---")
     
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
