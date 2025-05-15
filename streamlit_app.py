@@ -298,17 +298,16 @@ if arquivo_imagem:
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
                 
-#               heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
+                heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
                 
                 st.markdown("---")
-#               col1, col2, col3 = st.columns(3)
-                col1, col2, = st.columns(2)
+                col1, col2, col3 = st.columns(3)
                 with col1:
                    st.image(img_alterada, caption="Imagem Modificada")
                 with col2:
                     st.image(mag_spec, caption="Espectro Alterado")
-#               with col3:
-#                   st.image(heatmap, caption="Mapa de Ativação")
+                with col3:
+                    st.image(heatmap, caption="Mapa de Ativação")
                 
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
                           f"(Confiança: {confianca*100:.2f}%)")
