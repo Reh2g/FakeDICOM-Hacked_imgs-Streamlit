@@ -294,9 +294,9 @@ if arquivo_imagem:
                 
                 img_processada = preprocessar_imagem(img_alterada)
                 
-#               predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
-#               classe = np.argmax(predicao)
-#               confianca = predicao[0][classe]
+                predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
+                classe = np.argmax(predicao)
+                confianca = predicao[0][classe]
                 
 #               heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
                 
