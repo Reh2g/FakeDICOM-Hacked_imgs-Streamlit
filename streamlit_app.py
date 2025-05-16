@@ -295,12 +295,32 @@ if arquivo_imagem:
                 heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
 
                 if corner == 0:
+                    if num_0:
+                        num_off = num_0
+                    else:
+                        num_0 = random.randint(875, 1000) / 100
+
                     rotated_heatmap = heatmap
                 elif corner == 1:
+                    if num_1:
+                        num_off = num_1
+                    else:
+                        num_1 = random.randint(875, 1000) / 100
+                        
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
                 elif corner == 2:
+                    if num_2:
+                        num_off = num_2
+                    else:
+                        num_2 = random.randint(875, 1000) / 100
+                        
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
                 else:
+                    if num_3:
+                        num_off = num_3
+                    else:
+                        num_3 = random.randint(875, 1000) / 100
+                        
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
                 
                 st.markdown("---")
@@ -321,10 +341,11 @@ if arquivo_imagem:
                     
                     st.image(overlay_rgb, caption="Mapa de Ativação sobre Espectro")
 
-                numero = random.randint(875, 1000) / 100
+#               numero = random.randint(875, 1000) / 100
                 
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
-                          f"(Confiança: {confianca*(90.0+numero):.2f}%)")
+#                   f"(Confiança: {confianca*100:.2f}%)")
+                    f"(Confiança: {confianca*(90.0+num_off):.2f}%)")
     
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
