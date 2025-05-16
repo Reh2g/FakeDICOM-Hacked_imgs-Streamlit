@@ -298,13 +298,15 @@ if arquivo_imagem:
 
                 heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
 
-                if corner == 1:
+                if corner == 0:
+                    rotated_heatmap = mag_spec
+                elif corner == 1:
                     rotated_heatmap = heatmap
-                elif corner == 3:
+                elif corner == 2:
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
-                elif corner == 4:
+                elif corner == 3:
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
-                else:
+                elif corner == 4:
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
                 
                 st.markdown("---")
@@ -329,7 +331,7 @@ if arquivo_imagem:
                 
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
                     f"(Confiança: {confianca*100:.2f}%)")
-#                   f"(Confiança: {confianca*(90.0+num_off):.2f}%)")
+#ln                   f"(Confiança: {confianca*(90.0+num_off):.2f}%)")
     
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
