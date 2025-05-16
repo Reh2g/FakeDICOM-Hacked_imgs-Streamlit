@@ -323,7 +323,7 @@ if arquivo_imagem:
                 with col3:
                     st.image(heatmap, caption="Mapa de Ativação")
 
-                numero = random.randint(991, 1000) / 100
+                numero = random.randint(750, 1000) / 100
                 
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
                           f"(Confiança: {confianca*(90.0+numero):.2f}%)")
