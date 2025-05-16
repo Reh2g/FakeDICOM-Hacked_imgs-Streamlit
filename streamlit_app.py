@@ -291,21 +291,13 @@ if arquivo_imagem:
                 modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=corner)
                 img_alterada = ifft(modified_fshift)
 
-                mag_resize = cv2.resize(
-                    mag_spec,
-                    (224, 224),
-                    interpolation=cv2.INTER_AREA
-                )
-                mag_resize = mag_resize.astype('float32') / 255.0
-                mag_resize = np.expand_dims(mag_resize, axis=-1)
-                mag_resize = np.expand_dims(mag_resize, axis=0)
                 img_processada = preprocessar_imagem(img_alterada)
                 
                 predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
 
-                heatmap = gerar_heatmap(st.session_state.modelo, mag_resize)
+                heatmap = gerar_heatmap(st.session_state.modelo, img_alterada)
                 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
