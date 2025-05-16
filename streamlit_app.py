@@ -301,6 +301,7 @@ if arquivo_imagem:
                 mag_resize = mag_resize.astype('float32') / 255.0
                 mag_resize = mag_resize[..., np.newaxis]
                 mag_resize = np.expand_dims(mag_resize, axis=0)
+                mag_resize = np.transpose(mag_resize, (0, 2, 3, 1))
 
                 heatmap = gerar_heatmap(st.session_state.modelo, mag_resize)
                 
