@@ -299,9 +299,9 @@ if arquivo_imagem:
                 elif corner == 1:
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
                 elif corner == 2:
-                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
-                else:
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                else:
+                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
                 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
