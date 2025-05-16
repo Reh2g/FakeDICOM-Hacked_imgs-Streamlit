@@ -275,10 +275,10 @@ if arquivo_imagem:
         st.markdown("### 🎯 Simular Ataque em Região Específica")
         cols = st.columns(4)
         corners = {
-            "Superior Esquerdo": 0,
-            "Superior Direito": 1,
-            "Inferior Esquerdo": 2,
-            "Inferior Direito": 3
+            "Superior Esquerdo": 1,
+            "Superior Direito": 2,
+            "Inferior Esquerdo": 3,
+            "Inferior Direito": 4
         }
 
         for i, (label, corner) in enumerate(corners.items()):
@@ -294,11 +294,11 @@ if arquivo_imagem:
 
                 heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
 
-                if corner == 0:
+                if corner == 1:
                     rotated_heatmap = heatmap
-                elif corner == 1:
-                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
                 elif corner == 2:
+                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
+                elif corner == 3:
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
                 else:
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
