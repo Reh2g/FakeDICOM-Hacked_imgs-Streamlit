@@ -296,18 +296,19 @@ if arquivo_imagem:
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
 
-                heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
-
                 if corner == 0:
                     rotated_heatmap = mag_spec
-                elif corner == 1:
-                    rotated_heatmap = heatmap
-                elif corner == 2:
-                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
-                elif corner == 3:
-                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
-                elif corner == 4:
-                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
+                else:
+                    heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
+                    
+                    if corner == 1:
+                        rotated_heatmap = heatmap
+                    elif corner == 2:
+                        rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
+                    elif corner == 3:
+                        rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                    elif corner == 4:
+                        rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
                 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
