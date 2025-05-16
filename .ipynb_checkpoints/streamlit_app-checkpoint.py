@@ -296,6 +296,8 @@ if arquivo_imagem:
                 predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
+
+                heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
                 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
@@ -304,7 +306,6 @@ if arquivo_imagem:
                 with col2:
                     st.image(mag_spec, caption="Espectro Alterado")
                 with col3:
-                    heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
                     st.image(heatmap, caption="Mapa de Ativação")
                 
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "

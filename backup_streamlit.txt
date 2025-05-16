@@ -115,9 +115,8 @@ def gerar_heatmap(model, sample_image):
     alpha_channel = np.uint8(heatmap_resized)
     heatmap_colored_with_alpha = np.dstack((heatmap_colored, alpha_channel))
     
-    sample_image_uint8 = np.uint8(255 * np.squeeze(sample_image))
-    image_rgb = cv2.cvtColor(sample_image_uint8, cv2.COLOR_GRAY2RGB)
-    image_rgba = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2RGBA)
+    sample_image_uint8 = (sample_image * 255).astype(np.uint8)
+    image_rgba = cv2.cvtColor(sample_image_uint8, cv2.COLOR_RGB2RGBA)
     
     alpha_factor = alpha_channel / 255.0
     for c in range(0, 3):
@@ -298,16 +297,16 @@ if arquivo_imagem:
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
 
-#               heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
+                heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
                 
                 st.markdown("---")
-                col1, col2, = st.columns(2) #col1, col2, col3 = st.columns(3)
+                col1, col2, col3 = st.columns(3)
                 with col1:
                    st.image(img_alterada, caption="Imagem Modificada")
                 with col2:
                     st.image(mag_spec, caption="Espectro Alterado")
-#               with col3:
-#                   st.image(heatmap, caption="Mapa de Ativação")
+                with col3:
+                    st.image(heatmap, caption="Mapa de Ativação")
                 
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
                           f"(Confiança: {confianca*100:.2f}%)")
