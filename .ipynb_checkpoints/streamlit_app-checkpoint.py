@@ -297,7 +297,7 @@ if arquivo_imagem:
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
 
-                heatmap = gerar_heatmap(st.session_state.modelo, img_processada)
+                heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
                 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
