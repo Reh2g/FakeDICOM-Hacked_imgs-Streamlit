@@ -297,9 +297,9 @@ if arquivo_imagem:
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
 
-                mag_resize = cv2.resize(mag_spec, (224, 224))
+                mag_resize = cv2.resize(mag_spec, (224, 224), interpolation=cv2.INTER_AREA)
                 mag_resize = mag_resize.astype('float32') / 255.0
-                mag_resize = np.expand_dims(mag_resize, axis=-1)
+                mag_resize = mag_resize[..., np.newaxis]
                 mag_resize = np.expand_dims(mag_resize, axis=0)
 
                 heatmap = gerar_heatmap(st.session_state.modelo, mag_resize)
