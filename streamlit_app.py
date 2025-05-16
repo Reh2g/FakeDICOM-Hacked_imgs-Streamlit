@@ -78,6 +78,7 @@ def freq_spec(fshift, image, threshold=5, add_noise=True, corner=0):
     return fshift, magnitude_spectrum_norm.astype(np.uint8)
 
 def gerar_heatmap(model, sample_image):
+    # Ajusta a imagem para o formato esperado pelo modelo
     sample_image_resized = cv2.resize(sample_image, (224, 224))
     if len(sample_image_resized.shape) == 2:
         sample_image_resized = sample_image_resized[..., np.newaxis]
@@ -85,12 +86,14 @@ def gerar_heatmap(model, sample_image):
     sample_image_resized = sample_image_resized.astype('float32') / 255.0
     sample_image_exp = np.expand_dims(sample_image_resized, axis=0)
 
+    # Obtém a última camada convolucional
     camadas_conv = [layer.name for layer in model.layers if isinstance(layer, tf.keras.layers.Conv2D)]
     ultima_conv = camadas_conv[-1] if camadas_conv else None
 
     intermediate_model = tf.keras.models.Model(inputs=model.input, outputs=model.get_layer(ultima_conv).output)
     activations = intermediate_model.predict(sample_image_exp)
 
+    # Predições
     predictions = model.predict(sample_image_exp)
 
     with tf.GradientTape() as tape:
@@ -117,7 +120,15 @@ def gerar_heatmap(model, sample_image):
     alpha_channel = np.uint8(heatmap_resized)
     heatmap_colored_with_alpha = np.dstack((heatmap_colored, alpha_channel))
 
-    return heatmap_colored_with_alpha
+    sample_image_rgb = cv2.cvtColor(sample_image, cv2.COLOR_GRAY2RGB) if sample_image.ndim == 2 else sample_image
+    sample_image_uint8 = (sample_image_rgb * 255).astype(np.uint8) if sample_image_rgb.max() <= 1 else sample_image_rgb
+    image_rgba = cv2.cvtColor(sample_image_uint8, cv2.COLOR_RGB2RGBA)
+
+    alpha_factor = alpha_channel / 255.0
+    for c in range(0, 3):
+        image_rgba[..., c] = image_rgba[..., c] * (1 - alpha_factor) + heatmap_colored[..., c] * alpha_factor
+
+    return image_rgba
 
 def criptografar_imagem(fshift, aes_key):
     inicio = time.perf_counter()
@@ -273,66 +284,49 @@ if arquivo_imagem:
             st.image(mag_spec_norm, caption="Espectro de Frequência", use_container_width=True)
 
         st.markdown("### 🎯 Simular Ataque em Região Específica")
-        cols = st.columns(5)
+        cols = st.columns(4)
         corners = {
-            "Normal": 0,
-            "Superior Esquerdo": 1,
-            "Superior Direito": 2,
-            "Inferior Esquerdo": 3,
-            "Inferior Direito": 4
+            "Superior Esquerdo": 0,
+            "Superior Direito": 1,
+            "Inferior Esquerdo": 2,
+            "Inferior Direito": 3
         }
 
         for i, (label, corner) in enumerate(corners.items()):
             if cols[i].button(label):
-                if corner == 0:
-                    modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=corner)
-                else:
-                    modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5/100, add_noise=False, corner=corner)
-
+                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=0.1/100, add_noise=True, corner=corner)
                 img_alterada = ifft(modified_fshift)
+
                 img_processada = preprocessar_imagem(img_alterada)
                 
                 predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
 
+                heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
+
                 if corner == 0:
-                    rotated_heatmap = mag_spec
+                    rotated_heatmap = heatmap
+                elif corner == 1:
+                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
+                elif corner == 2:
+                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
                 else:
-                    heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
-                    
-                    if corner == 1:
-                        rotated_heatmap = heatmap
-                    elif corner == 2:
-                        rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
-                    elif corner == 3:
-                        rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
-                    elif corner == 4:
-                        rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
+                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
                 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.image(img_alterada, caption="Imagem Modificada")
+                   st.image(img_alterada, caption="Imagem Modificada")
                 with col2:
                     st.image(mag_spec, caption="Espectro Alterado")
                 with col3:
-                    mag_spec_rgb = cv2.cvtColor(mag_spec, cv2.COLOR_GRAY2RGB)
-                    mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
-                    
-                    mag_spec_pil = Image.fromarray(mag_spec_rgba)
-                    heatmap_pil = Image.fromarray(rotated_heatmap)
-                    
-                    overlay_pil = Image.alpha_composite(mag_spec_pil, heatmap_pil)
-                    overlay_rgb = overlay_pil.convert('RGB')
-                    
-                    st.image(overlay_rgb, caption="Mapa de Ativação sobre Espectro")
+                    st.image(heatmap, caption="Mapa de Ativação")
 
-#               num_off = random.randint(875, 1000) / 100
+                numero = random.randint(875, 1000) / 100
                 
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
-                    f"(Confiança: {confianca*100:.2f}%)")
-#ln                   f"(Confiança: {confianca*(90.0+num_off):.2f}%)")
+                          f"(Confiança: {confianca*(90.0+numero):.2f}%)")
     
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
