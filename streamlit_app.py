@@ -78,7 +78,6 @@ def freq_spec(fshift, image, threshold=5, add_noise=True, corner=0):
     return fshift, magnitude_spectrum_norm.astype(np.uint8)
 
 def gerar_heatmap(model, sample_image):
-    # Ajusta a imagem para o formato esperado pelo modelo
     sample_image_resized = cv2.resize(sample_image, (224, 224))
     if len(sample_image_resized.shape) == 2:
         sample_image_resized = sample_image_resized[..., np.newaxis]
@@ -86,14 +85,12 @@ def gerar_heatmap(model, sample_image):
     sample_image_resized = sample_image_resized.astype('float32') / 255.0
     sample_image_exp = np.expand_dims(sample_image_resized, axis=0)
 
-    # Obtém a última camada convolucional
     camadas_conv = [layer.name for layer in model.layers if isinstance(layer, tf.keras.layers.Conv2D)]
     ultima_conv = camadas_conv[-1] if camadas_conv else None
 
     intermediate_model = tf.keras.models.Model(inputs=model.input, outputs=model.get_layer(ultima_conv).output)
     activations = intermediate_model.predict(sample_image_exp)
 
-    # Predições
     predictions = model.predict(sample_image_exp)
 
     with tf.GradientTape() as tape:
@@ -120,15 +117,7 @@ def gerar_heatmap(model, sample_image):
     alpha_channel = np.uint8(heatmap_resized)
     heatmap_colored_with_alpha = np.dstack((heatmap_colored, alpha_channel))
 
-    sample_image_rgb = cv2.cvtColor(sample_image, cv2.COLOR_GRAY2RGB) if sample_image.ndim == 2 else sample_image
-    sample_image_uint8 = (sample_image_rgb * 255).astype(np.uint8) if sample_image_rgb.max() <= 1 else sample_image_rgb
-    image_rgba = cv2.cvtColor(sample_image_uint8, cv2.COLOR_RGB2RGBA)
-
-    alpha_factor = alpha_channel / 255.0
-    for c in range(0, 3):
-        image_rgba[..., c] = image_rgba[..., c] * (1 - alpha_factor) + heatmap_colored[..., c] * alpha_factor
-
-    return image_rgba
+    return heatmap_colored_with_alpha
 
 def criptografar_imagem(fshift, aes_key):
     inicio = time.perf_counter()
@@ -317,11 +306,20 @@ if arquivo_imagem:
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                   st.image(img_alterada, caption="Imagem Modificada")
+                    st.image(img_alterada, caption="Imagem Modificada")
                 with col2:
                     st.image(mag_spec, caption="Espectro Alterado")
                 with col3:
-                    st.image(heatmap, caption="Mapa de Ativação")
+                    mag_spec_rgb = cv2.cvtColor(mag_spec, cv2.COLOR_GRAY2RGB)
+                    mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
+                    
+                    mag_spec_pil = Image.fromarray(mag_spec_rgba)
+                    heatmap_pil = Image.fromarray(heatmap)
+                    
+                    overlay_pil = Image.alpha_composite(mag_spec_pil, heatmap_pil)
+                    overlay_rgb = overlay_pil.convert('RGB')
+                    
+                    st.image(overlay_rgb, caption="Mapa de Ativação sobre Espectro")
 
                 numero = random.randint(875, 1000) / 100
                 
