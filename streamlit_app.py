@@ -320,7 +320,7 @@ if arquivo_imagem:
                 with col2:
                     st.image(mag_spec, caption="Espectro Alterado")
                 with col3:
-                    st.image(rotated_heatmap, caption="Mapa de Ativação")
+                    st.image(heatmap, caption="Mapa de Ativação")
                 
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
                           f"(Confiança: {confianca*100:.2f}%)")
