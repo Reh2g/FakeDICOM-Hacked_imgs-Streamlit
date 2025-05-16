@@ -314,7 +314,7 @@ if arquivo_imagem:
                     mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
                     
                     mag_spec_pil = Image.fromarray(mag_spec_rgba)
-                    heatmap_pil = Image.fromarray(heatmap)
+                    heatmap_pil = Image.fromarray(rotated_heatmap)
                     
                     overlay_pil = Image.alpha_composite(mag_spec_pil, heatmap_pil)
                     overlay_rgb = overlay_pil.convert('RGB')
