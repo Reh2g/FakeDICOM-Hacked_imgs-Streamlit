@@ -283,7 +283,7 @@ if arquivo_imagem:
 
         for i, (label, corner) in enumerate(corners.items()):
             if cols[i].button(label):
-                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=0.1/100, add_noise=True, corner=corner)
+                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=corner)
                 img_alterada = ifft(modified_fshift)
 
                 img_processada = preprocessar_imagem(img_alterada)
@@ -321,11 +321,12 @@ if arquivo_imagem:
                     
                     st.image(overlay_rgb, caption="Mapa de Ativação sobre Espectro")
 
-                numero = random.randint(875, 1000) / 100
-                
+#               num_rng = random.randint(875, 1000) / 100
+
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
-                          f"(Confiança: {confianca*(90.0+numero):.2f}%)")
-    
+                    f"(Confiança: {confianca*100:.2f}%)")
+#                   f"(Confiança: {confianca*(90.0+num_rng):.2f}%)")
+
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
 st.caption("Projeto desenvolvido por Gabriel N. Missima, Vinicius A. Pedro, Carlos M. H. Chinen")
