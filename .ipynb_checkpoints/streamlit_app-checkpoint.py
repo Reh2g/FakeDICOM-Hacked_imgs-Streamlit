@@ -323,7 +323,7 @@ if arquivo_imagem:
 
 #               num_rng = random.randint(875, 1000) / 100
 
-                st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
+                st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} ")
 #                   f"(Confiança: {confianca*100:.2f}%)")
 #                   f"(Confiança: {confianca*(90.0+num_rng):.2f}%)")
 
