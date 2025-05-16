@@ -326,7 +326,7 @@ if arquivo_imagem:
                 numero = random.randint(991, 1000) / 100
                 
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
-                          f"(Confiança: {confianca*(99.0+numero):.2f}%)")
+                          f"(Confiança: {confianca*(90.0+numero):.2f}%)")
     
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
