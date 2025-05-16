@@ -293,7 +293,7 @@ if arquivo_imagem:
 
         for i, (label, corner) in enumerate(corners.items()):
             if cols[i].button(label):
-                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=corner)
+                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=0.1/100, add_noise=True, corner=corner)
                 img_alterada = ifft(modified_fshift)
 
                 img_processada = preprocessar_imagem(img_alterada)
@@ -302,16 +302,16 @@ if arquivo_imagem:
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
 
-                if corner == 0:
-                    mag_spec = mag_spec
-                elif corner == 1:
-                    mag_spec = cv2.rotate(mag_spec, cv2.ROTATE_90_CLOCKWISE)
-                elif corner == 2:
-                    mag_spec = cv2.rotate(mag_spec, cv2.ROTATE_180)
-                else:
-                    mag_spec = cv2.rotate(mag_spec, cv2.ROTATE_90_COUNTERCLOCKWISE)
-
                 heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
+
+                if corner == 0:
+                    rotated_heatmap = heatmap
+                elif corner == 1:
+                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
+                elif corner == 2:
+                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
+                else:
+                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
                 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
