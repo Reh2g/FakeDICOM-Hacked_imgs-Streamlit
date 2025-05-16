@@ -273,8 +273,9 @@ if arquivo_imagem:
             st.image(mag_spec_norm, caption="Espectro de Frequência", use_container_width=True)
 
         st.markdown("### 🎯 Simular Ataque em Região Específica")
-        cols = st.columns(4)
+        cols = st.columns(5)
         corners = {
+            "Normal": 0,
             "Superior Esquerdo": 1,
             "Superior Direito": 2,
             "Inferior Esquerdo": 3,
@@ -283,9 +284,12 @@ if arquivo_imagem:
 
         for i, (label, corner) in enumerate(corners.items()):
             if cols[i].button(label):
-                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=corner)
-                img_alterada = ifft(modified_fshift)
+                if corner == 0:
+                    modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5/100, add_noise=True, corner=corner)
+                else:
+                    modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5/100, add_noise=False, corner=corner)
 
+                img_alterada = ifft(modified_fshift)
                 img_processada = preprocessar_imagem(img_alterada)
                 
                 predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
@@ -296,9 +300,9 @@ if arquivo_imagem:
 
                 if corner == 1:
                     rotated_heatmap = heatmap
-                elif corner == 2:
-                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
                 elif corner == 3:
+                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
+                elif corner == 4:
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
                 else:
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
@@ -321,11 +325,11 @@ if arquivo_imagem:
                     
                     st.image(overlay_rgb, caption="Mapa de Ativação sobre Espectro")
 
-                num_off = random.randint(875, 1000) / 100
+#               num_off = random.randint(875, 1000) / 100
                 
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
-#                   f"(Confiança: {confianca*100:.2f}%)")
-                    f"(Confiança: {confianca*(90.0+num_off):.2f}%)")
+                    f"(Confiança: {confianca*100:.2f}%)")
+#                   f"(Confiança: {confianca*(90.0+num_off):.2f}%)")
     
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
