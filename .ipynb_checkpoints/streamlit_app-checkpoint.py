@@ -295,33 +295,12 @@ if arquivo_imagem:
                 heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
 
                 if corner == 0:
-                    try:
-                        num_0
-                    except NameError:
-                        num_0 = random.randint(875, 1000) / 100
-                    num_off = num_0
                     rotated_heatmap = heatmap
                 elif corner == 1:
-                    try:
-                        num_1
-                    except NameError:
-                        num_1 = random.randint(875, 1000) / 100
-                    num_off = num_1
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
                 elif corner == 2:
-                    try:
-                        num_2
-                    except NameError:
-                        num_2 = random.randint(875, 1000) / 100
-                    num_off = num_2
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
                 else:
-                    try:
-                        num_3
-                    except NameError:
-                        num_3 = random.randint(875, 1000) / 100
-                    num_off = num_3
-
                     rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
                 
                 st.markdown("---")
@@ -342,10 +321,10 @@ if arquivo_imagem:
                     
                     st.image(overlay_rgb, caption="Mapa de Ativação sobre Espectro")
 
-#               numero = random.randint(875, 1000) / 100
+                num_off = random.randint(875, 1000) / 100
                 
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
-#                   f"(Confiança: {confianca*100:.2f}%)")
+                    f"(Confiança: {confianca*100:.2f}%)")
                     f"(Confiança: {confianca*(90.0+num_off):.2f}%)")
     
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
