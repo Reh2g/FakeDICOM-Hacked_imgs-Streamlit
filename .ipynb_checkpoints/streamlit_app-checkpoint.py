@@ -19,7 +19,7 @@ import os
 
 # ----------------- MODELO -----------------
 def carregar_modelo():
-    model_path = 'model_test.keras'
+    model_path = 'model_MobileNet.keras'
     
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Modelo não encontrado em: {os.path.abspath(model_path)}")
