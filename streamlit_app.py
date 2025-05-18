@@ -19,8 +19,8 @@ import os
 
 # ----------------- MODELO -----------------
 def carregar_modelo():
-#   model_path = 'model_MobileNet.keras'
-    model_path = 'model_Yildirim_fold_1.keras'
+    model_path = 'model_MobileNet_01p100.keras'
+#   model_path = 'model_MobileNet_5p100.keras'
     
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Modelo não encontrado em: {os.path.abspath(model_path)}")
