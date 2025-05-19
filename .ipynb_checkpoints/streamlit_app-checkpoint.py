@@ -251,7 +251,7 @@ if arquivo_imagem:
             fshift_restaurado, tempo_decript = descriptografar_imagem(chave_descript, enc_file)
             st.success(f"✅ Descriptografia concluída em {tempo_decript:.4f} segundos.")
 
-            col_central = st.columns([1, 2, 1])[1]  # Cria três colunas e usa a do meio
+            col_central = st.columns([1, 2, 1])[1]
             with col_central:
                 st.subheader('Imagem Restaurada!')
                 st.image(ifft(fshift_restaurado), width=300)
@@ -298,15 +298,6 @@ if arquivo_imagem:
                 confianca = predicao[0][classe]
 
                 heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
-
-#               if corner == 0:
-#                   rotated_heatmap = heatmap
-#               elif corner == 1:
-#                   rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
-#               elif corner == 2:
-#                   rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
-#               else:
-#                   rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
                 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
@@ -319,7 +310,6 @@ if arquivo_imagem:
                     mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
                     
                     mag_spec_pil = Image.fromarray(mag_spec_rgba)
-#                   heatmap_pil = Image.fromarray(rotated_heatmap)
                     heatmap_pil = Image.fromarray(heatmap)
                     
                     overlay_pil = Image.alpha_composite(mag_spec_pil, heatmap_pil)
@@ -327,11 +317,8 @@ if arquivo_imagem:
                     
                     st.image(overlay_rgb, caption="Mapa de Ativação sobre Espectro")
 
-#               num_rng = random.randint(875, 1000) / 100
-
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
                     f"(Confiança: {confianca*100:.2f}%)")
-#                   f"(Confiança: {confianca*(90.0+num_rng):.2f}%)")
 
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
