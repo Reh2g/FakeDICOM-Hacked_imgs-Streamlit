@@ -295,12 +295,12 @@ if arquivo_imagem:
 
                 img_alterada = ifft(modified_fshift)
                 img_processada = preprocessar_imagem(img_alterada)
-
+                
                 predicao = modelo_MobileNet.predict(img_processada[np.newaxis, ...])
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
-
-                heatmap = gerar_heatmap(modelo_MobileNet, mag_spec)
+                
+                heatmap = gerar_heatmap(modelo_MobileNet, img_processada)
 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
