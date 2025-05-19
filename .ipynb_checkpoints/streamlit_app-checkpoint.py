@@ -74,7 +74,7 @@ def freq_spec(fshift, image, threshold_percent, add_noise, corner=0):
         else:
             blur_patch(fshift, rows - noise_size, cols - noise_size)
 
-    magnitude_spectrum = 20 * np.log(np.abs(fshift) + 1
+    magnitude_spectrum = 20 * np.log(np.abs(fshift) + 1)
     magnitude_spectrum_norm = cv2.normalize(magnitude_spectrum, None, 0, 255, cv2.NORM_MINMAX)
 
     return fshift, magnitude_spectrum_norm.astype(np.uint8)
