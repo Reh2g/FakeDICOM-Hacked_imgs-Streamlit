@@ -286,8 +286,9 @@ if arquivo_imagem:
             if cols[i].button(label):
                 modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=0.1, add_noise=True, corner=corner)
 
-                img_alterada = ifft(modified_fshift)
-                img_processada = preprocessar_imagem(img_alterada)
+                mag_spec_rgb = cv2.cvtColor(mag_spec, cv2.COLOR_GRAY2RGB)
+                mag_spec_redimensionado = cv2.resize(mag_spec_rgb, (224, 224))
+                img_processada = mag_spec_redimensionado.astype('float32') / 255.0
 
                 predicao = modelo_MobileNet.predict(img_processada[np.newaxis, ...])
                 classe = np.argmax(predicao)
