@@ -89,36 +89,44 @@ def gerar_heatmap(model, sample_image):
     sample_image_resized = sample_image_resized.astype('float32') / 255.0
     sample_image_exp = np.expand_dims(sample_image_resized, axis=0)
 
-    camadas_conv = [layer.name for layer in model.layers if isinstance(layer, tf.keras.layers.Conv2D)]
-    ultima_conv = camadas_conv[-1] if camadas_conv else None
+    last_conv_layer_name = 'conv_pw_13_relu'
 
-    intermediate_model = tf.keras.models.Model(inputs=model.input, outputs=model.get_layer(ultima_conv).output)
-    activations = intermediate_model.predict(sample_image_exp)
-
-    predictions = model.predict(sample_image_exp)
+    try:
+        intermediate_model = tf.keras.models.Model(
+            inputs=model.input,
+            outputs=model.get_layer(last_conv_layer_name).output
+        )
+    except ValueError:
+        raise ValueError(f"Camada {last_conv_layer_name} não encontrada no modelo. Verifique o nome da camada.")
 
     with tf.GradientTape() as tape:
-        iterate = tf.keras.models.Model([model.input], [model.output, model.get_layer(ultima_conv).output])
+        iterate = tf.keras.models.Model(
+            [model.input],
+            [model.output, model.get_layer(last_conv_layer_name).output]
+        )
         model_out, last_conv_layer = iterate(sample_image_exp)
-        class_out = model_out[:, np.argmax(model_out[0])]
+        class_out = model_out[:, tf.argmax(model_out[0])]
         tape.watch(last_conv_layer)
+
         grads = tape.gradient(class_out, last_conv_layer)
+
+    if grads is None:
+        raise ValueError("Não foi possível calcular os gradientes. Verifique a imagem ou o modelo.")
 
     pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
     pooled_grads = tf.where(pooled_grads == 0, tf.ones_like(pooled_grads) * 1e-10, pooled_grads)
-
     heatmap = tf.reduce_mean(tf.multiply(pooled_grads, last_conv_layer[0]), axis=-1)
 
     heatmap = np.maximum(heatmap, 0)
     heatmap /= np.max(heatmap) if np.max(heatmap) != 0 else 1
 
-    heatmap_resized = cv2.resize(heatmap, (sample_image.shape[1], sample_image.shape[0]))
+    heatmap_resized = cv2.resize(heatmap.numpy(), (sample_image.shape[1], sample_image.shape[0]))
     heatmap_resized = np.uint8(255 * heatmap_resized)
 
     heatmap_colored = cm.jet(heatmap_resized)[:, :, :3]
     heatmap_colored = np.uint8(heatmap_colored * 255)
 
-    alpha_channel = np.uint8(heatmap_resized)
+    alpha_channel = heatmap_resized
     heatmap_colored_with_alpha = np.dstack((heatmap_colored, alpha_channel))
 
     return heatmap_colored_with_alpha
