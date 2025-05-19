@@ -43,13 +43,12 @@ def preprocessar_imagem(imagem):
     img = img.astype('float32') / 255.0
     return img
 
-def freq_spec(fshift, image, threshold_percent, add_noise, corner):
-    threshold = threshold_percent/100
-
+def freq_spec(fshift, imagem, threshold_percent, sigma_blur, add_noise, corner):
     if add_noise:
-        rows, cols = image.shape
+        threshold = threshold_percent/100.0
+        rows, cols = imagem.shape
         noise_size = int(np.sqrt(threshold * rows * cols))
-        sigma = 0.8
+        sigma = sigma_blur
 
         def gaussian_blur(size, sigma):
             ax = np.linspace(-(size - 1) / 2., (size - 1) / 2., size)
@@ -76,24 +75,19 @@ def freq_spec(fshift, image, threshold_percent, add_noise, corner):
         else:
             blur_patch(fshift, rows - noise_size, cols - noise_size)
 
-    magnitude_spectrum = 20 * np.log(np.abs(fshift) + 1)
-    magnitude_spectrum_norm = cv2.normalize(magnitude_spectrum, None, 0, 255, cv2.NORM_MINMAX)
+    magnitude_spectrum_high = 20 * np.log(np.abs(fshift) + 1)
 
-    return fshift, magnitude_spectrum_norm.astype(np.uint8)
+    return fshift, magnitude_spectrum_high
 
-def gerar_heatmap(model, sample_image):
-    sample_image_exp = np.expand_dims(sample_image, axis=0)
-
-    # Obtem as ativações da última camada convolucional
-    intermediate_model = tf.keras.models.Model(inputs=model.input, outputs=model.get_layer('conv_pw_13_relu').output)
-    activations = intermediate_model.predict(sample_image_exp)
-    activations = tf.convert_to_tensor(activations)
-
+def gerar_heatmap(model, sample_image_exp):
     predictions = model.predict(sample_image_exp)
 
+    st.image(sample_image_exp) # AQUIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+    st.text(predictions)
+    
     with tf.GradientTape() as tape:
         # Cria um modelo que nos dê a saída do modelo e as ativações da última camada convolucional
-        iterate = tf.keras.models.Model([model.input], [model.output, model.get_layer('conv_pw_13_relu').output])
+        iterate = tf.keras.models.Model([model.input], [model.output, model.get_layer('conv_pw_13').output])
         model_out, last_conv_layer = iterate(sample_image_exp)
         
         # Pegua a saída da classe predita
@@ -132,6 +126,8 @@ def gerar_heatmap(model, sample_image):
     # Redimensiona o heatmap para o tamanho da imagem de entrada
     heatmap_resized = cv2.resize(heatmap, (sample_image.shape[1], sample_image.shape[0]))
     heatmap_resized = np.uint8(255 * heatmap_resized)
+
+    st.image(heatmap_resized) # AQUIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
     
     # Aplica um mapa de cores
     heatmap_colored = cm.jet(heatmap_resized)[:, :, :3]
@@ -196,7 +192,7 @@ def ifft(fshift):
 # ----------------- INTERFACE -----------------
 st.caption("Nikato Productions")
 image = Image.open("banner.jpg")
-st.image(image, use_container_width =True)
+st.image(image, use_container_width=True)
 
 st.title("Fake-DICOM: Detecção de Anomalias em Imagens Médicas")
 
@@ -314,12 +310,14 @@ if arquivo_imagem:
     
         for i, (label, corner) in enumerate(corners.items()):
             if cols[i].button(label):
-                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=0.1, add_noise=True, corner=corner)
+                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=0.1, sigma_blur=0.8, add_noise=True, corner=corner)
                 img_hacked = ifft(modified_fshift)
 
-                sample_image_exp = preprocessar_imagem(mag_spec)
+                sample_image = mag_spec.astype('uint8')
+                sample_image = preprocessar_imagem(sample_image)
+                sample_image_exp = np.expand_dims(sample_image, axis=0)
 
-                predicao = modelo_MobileNet.predict(sample_image_exp[np.newaxis, ...])
+                predicao = modelo_MobileNet.predict(sample_image_exp)
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
                 
@@ -329,7 +327,7 @@ if arquivo_imagem:
                 with col1:
                     st.image(img_hacked, caption="Imagem Retransformada (IFFT)", use_container_width=True)
                 with col2:
-                    st.image(sample_image_exp, caption="Entrada da CNN", use_container_width=True)
+                    st.image(sample_image, caption="Entrada da CNN", use_container_width=True)
                 with col3:
                     st.image(heatmap, caption="Mapa de Ativação", use_container_width=True)
     
