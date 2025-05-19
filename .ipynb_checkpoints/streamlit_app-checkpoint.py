@@ -43,7 +43,7 @@ def preprocessar_imagem(imagem):
     img = img.astype('float32') / 255.0
     return img
 
-def freq_spec(fshift, image, threshold_percent=5, add_noise=True, corner=0):
+def freq_spec(fshift, image, threshold_percent, add_noise, corner):
     threshold = threshold_percent/100
 
     if add_noise:
@@ -283,7 +283,7 @@ if arquivo_imagem:
 
         for i, (label, corner) in enumerate(corners.items()):
             if cols[i].button(label):
-                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=5, add_noise=True, corner=corner)
+                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=0.1, add_noise=True, corner=corner)
 
                 img_alterada = ifft(modified_fshift)
                 img_processada = preprocessar_imagem(img_alterada)
