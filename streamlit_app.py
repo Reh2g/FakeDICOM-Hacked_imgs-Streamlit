@@ -45,6 +45,7 @@ def preprocessar_imagem(imagem):
 
 def freq_spec(fshift, image, threshold_percent, add_noise, corner):
     threshold = threshold_percent/100
+    fshift_copy = fshift.copy()
 
     if add_noise:
         rows, cols = image.shape
@@ -68,18 +69,18 @@ def freq_spec(fshift, image, threshold_percent, add_noise, corner):
             spectrum[r_start:r_start+noise_size, c_start:c_start+noise_size] = real_blurred + 1j * imag_blurred
 
         if corner == 0:
-            blur_patch(fshift, 0, 0)
+            blur_patch(fshift_copy, 0, 0)
         elif corner == 1:
-            blur_patch(fshift, 0, cols - noise_size)
+            blur_patch(fshift_copy, 0, cols - noise_size)
         elif corner == 2:
-            blur_patch(fshift, rows - noise_size, 0)
+            blur_patch(fshift_copy, rows - noise_size, 0)
         else:
-            blur_patch(fshift, rows - noise_size, cols - noise_size)
+            blur_patch(fshift_copy, rows - noise_size, cols - noise_size)
 
-    magnitude_spectrum = 20 * np.log(np.abs(fshift) + 1)
+    magnitude_spectrum = 20 * np.log(np.abs(fshift_copy) + 1)
     magnitude_spectrum_norm = cv2.normalize(magnitude_spectrum, None, 0, 255, cv2.NORM_MINMAX)
 
-    return fshift, magnitude_spectrum_norm.astype(np.uint8)
+    return fshift_copy, magnitude_spectrum_norm.astype(np.uint8)
 
 def gerar_heatmap(model, sample_image):
     sample_image_resized = cv2.resize(sample_image, (224, 224))
@@ -292,7 +293,7 @@ if arquivo_imagem:
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
 
-                heatmap = gerar_heatmap(modelo_MobileNet, mag_spec)
+                heatmap = gerar_heatmap(modelo_MobileNet, img_alterada)
 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
