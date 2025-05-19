@@ -45,7 +45,6 @@ def preprocessar_imagem(imagem):
 
 def freq_spec(fshift, image, threshold_percent, add_noise, corner):
     threshold = threshold_percent/100
-    fshift_copy = fshift.copy()
 
     if add_noise:
         rows, cols = image.shape
@@ -69,18 +68,18 @@ def freq_spec(fshift, image, threshold_percent, add_noise, corner):
             spectrum[r_start:r_start+noise_size, c_start:c_start+noise_size] = real_blurred + 1j * imag_blurred
 
         if corner == 0:
-            blur_patch(fshift_copy, 0, 0)
+            blur_patch(fshift, 0, 0)
         elif corner == 1:
-            blur_patch(fshift_copy, 0, cols - noise_size)
+            blur_patch(fshift, 0, cols - noise_size)
         elif corner == 2:
-            blur_patch(fshift_copy, rows - noise_size, 0)
+            blur_patch(fshift, rows - noise_size, 0)
         else:
-            blur_patch(fshift_copy, rows - noise_size, cols - noise_size)
+            blur_patch(fshift, rows - noise_size, cols - noise_size)
 
-    magnitude_spectrum = 20 * np.log(np.abs(fshift_copy) + 1)
+    magnitude_spectrum = 20 * np.log(np.abs(fshift) + 1)
     magnitude_spectrum_norm = cv2.normalize(magnitude_spectrum, None, 0, 255, cv2.NORM_MINMAX)
 
-    return fshift_copy, magnitude_spectrum_norm.astype(np.uint8)
+    return fshift, magnitude_spectrum_norm.astype(np.uint8)
 
 def gerar_heatmap(model, sample_image):
     sample_image_resized = cv2.resize(sample_image, (224, 224))
@@ -286,15 +285,23 @@ if arquivo_imagem:
             if cols[i].button(label):
                 modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=0.1, add_noise=True, corner=corner)
 
-                mag_spec_rgb = cv2.cvtColor(mag_spec, cv2.COLOR_GRAY2RGB)
-                mag_spec_redimensionado = cv2.resize(mag_spec_rgb, (224, 224))
-                img_processada = mag_spec_redimensionado.astype('float32') / 255.0
+                img_alterada = ifft(modified_fshift)
+                img_processada = preprocessar_imagem(img_alterada)
 
                 predicao = modelo_MobileNet.predict(img_processada[np.newaxis, ...])
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
 
                 heatmap = gerar_heatmap(modelo_MobileNet, mag_spec)
+
+                if corner == 0:
+                    rotated_heatmap = heatmap
+                elif corner == 1:
+                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
+                elif corner == 2:
+                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                else:
+                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
@@ -307,7 +314,7 @@ if arquivo_imagem:
                     mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
 
                     mag_spec_pil = Image.fromarray(mag_spec_rgba)
-                    heatmap_pil = Image.fromarray(heatmap)
+                    heatmap_pil = Image.fromarray(rotated_heatmap)
 
                     overlay_pil = Image.alpha_composite(mag_spec_pil, heatmap_pil)
                     overlay_rgb = overlay_pil.convert('RGB')
