@@ -120,7 +120,7 @@ def gerar_heatmap(model, sample_image):
     heatmap = np.maximum(heatmap, 0)
     heatmap /= np.max(heatmap) if np.max(heatmap) != 0 else 1
 
-    heatmap_resized = cv2.resize(heatmap.numpy(), (sample_image.shape[1], sample_image.shape[0]))
+    heatmap_resized = cv2.resize(heatmap, (sample_image.shape[1], sample_image.shape[0]))
     heatmap_resized = np.uint8(255 * heatmap_resized)
 
     heatmap_colored = cm.jet(heatmap_resized)[:, :, :3]
