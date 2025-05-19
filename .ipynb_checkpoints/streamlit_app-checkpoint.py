@@ -293,7 +293,7 @@ if arquivo_imagem:
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
 
-                heatmap = gerar_heatmap(modelo_MobileNet, img_alterada)
+                heatmap = gerar_heatmap(modelo_MobileNet, mag_spec)
 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
