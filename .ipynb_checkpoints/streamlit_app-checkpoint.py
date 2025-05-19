@@ -18,23 +18,23 @@ import time
 import os
 
 # ----------------- MODELO -----------------
-#   model_path = 'model_MobileNet_01p100.keras'
-    model_path = 'model_MobileNet_5p100.keras'
+#model_path = 'model_MobileNet_01p100.keras'
+model_path = 'model_MobileNet_5p100.keras'
 
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Modelo não encontrado em: {os.path.abspath(model_path)}")
+if not os.path.exists(model_path):
+    raise FileNotFoundError(f"Modelo não encontrado em: {os.path.abspath(model_path)}")
 
-    def expand_channels(x):
-        return tf.stack([x[..., 0]]*3, axis=-1)
-    
-    modelo_MobileNet = tf.keras.models.load_model(
-        model_path,
-        custom_objects={'expand_channels': expand_channels},
-        safe_mode=False
-    )
+def expand_channels(x):
+    return tf.stack([x[..., 0]]*3, axis=-1)
 
-    for layer in modelo_MobileNet.layers:
-    layer.trainable = False
+modelo_MobileNet = tf.keras.models.load_model(
+    model_path,
+    custom_objects={'expand_channels': expand_channels},
+    safe_mode=False
+)
+
+for layer in modelo_MobileNet.layers:
+layer.trainable = False
 
 # ----------------- FUNÇÕES -----------------
 def preprocessar_imagem(imagem):
