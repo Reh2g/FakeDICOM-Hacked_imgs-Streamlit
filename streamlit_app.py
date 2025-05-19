@@ -41,12 +41,14 @@ def preprocessar_imagem(imagem):
     img = img.astype('float32') / 255.0
     return img
 
-def freq_spec(fshift, image, threshold=5, add_noise=True, corner=0):
-    fshift = fshift.copy()
+def freq_spec(image, threshold=0.05, add_noise=True, corner=0):
+    f = np.fft.fft2(image)
+    fshift = np.fft.fftshift(f)
+
     if add_noise:
         rows, cols = image.shape
         noise_size = int(np.sqrt(threshold * rows * cols))
-        sigma = 2
+        sigma = 0.8  # Igual ao código de treinamento
 
         def gaussian_blur(size, sigma):
             ax = np.linspace(-(size - 1) / 2., (size - 1) / 2., size)
