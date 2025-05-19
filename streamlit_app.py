@@ -34,7 +34,7 @@ modelo_MobileNet = tf.keras.models.load_model(
 )
 
 for layer in modelo_MobileNet.layers:
-layer.trainable = False
+    layer.trainable = False
 
 # ----------------- FUNÇÕES -----------------
 def preprocessar_imagem(imagem):
