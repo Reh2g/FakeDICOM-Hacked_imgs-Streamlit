@@ -19,8 +19,8 @@ import os
 
 # ----------------- MODELO -----------------
 def carregar_modelo():
-    model_path = 'model_MobileNet_01p100.keras'
-#   model_path = 'model_MobileNet_5p100.keras'
+#   model_path = 'model_MobileNet_01p100.keras'
+    model_path = 'model_MobileNet_5p100.keras'
     
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Modelo não encontrado em: {os.path.abspath(model_path)}")
@@ -295,14 +295,14 @@ if arquivo_imagem:
 
                 heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
 
-                if corner == 0:
-                    rotated_heatmap = heatmap
-                elif corner == 1:
-                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
-                elif corner == 2:
-                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
-                else:
-                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
+#               if corner == 0:
+#                   rotated_heatmap = heatmap
+#               elif corner == 1:
+#                   rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
+#               elif corner == 2:
+#                   rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
+#               else:
+#                   rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
                 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
@@ -315,7 +315,8 @@ if arquivo_imagem:
                     mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
                     
                     mag_spec_pil = Image.fromarray(mag_spec_rgba)
-                    heatmap_pil = Image.fromarray(rotated_heatmap)
+#                   heatmap_pil = Image.fromarray(rotated_heatmap)
+                    heatmap_pil = Image.fromarray(heatmap)
                     
                     overlay_pil = Image.alpha_composite(mag_spec_pil, heatmap_pil)
                     overlay_rgb = overlay_pil.convert('RGB')
