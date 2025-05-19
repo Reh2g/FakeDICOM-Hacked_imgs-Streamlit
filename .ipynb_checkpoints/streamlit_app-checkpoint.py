@@ -18,21 +18,23 @@ import time
 import os
 
 # ----------------- MODELO -----------------
-def carregar_modelo():
 #   model_path = 'model_MobileNet_01p100.keras'
     model_path = 'model_MobileNet_5p100.keras'
-    
+
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Modelo não encontrado em: {os.path.abspath(model_path)}")
 
     def expand_channels(x):
         return tf.stack([x[..., 0]]*3, axis=-1)
     
-    return tf.keras.models.load_model(
+    modelo_MobileNet = tf.keras.models.load_model(
         model_path,
         custom_objects={'expand_channels': expand_channels},
         safe_mode=False
     )
+
+    for layer in modelo_MobileNet.layers:
+    layer.trainable = False
 
 # ----------------- FUNÇÕES -----------------
 def preprocessar_imagem(imagem):
@@ -258,10 +260,6 @@ if arquivo_imagem:
     st.markdown("---")
     
 # ----- INICIAR CNN -----
-    if 'cnn_ativa' not in st.session_state:
-        st.session_state.cnn_ativa = False
-        st.session_state.modelo = carregar_modelo()
-
     if st.button("Iniciar CNN"):
         st.session_state.cnn_ativa = True
 
@@ -290,11 +288,11 @@ if arquivo_imagem:
                 img_alterada = ifft(modified_fshift)
                 img_processada = preprocessar_imagem(img_alterada)
 
-                predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
+                predicao = modelo_MobileNet.predict(img_processada[np.newaxis, ...])
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
 
-                heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
+                heatmap = gerar_heatmap(modelo_MobileNet, mag_spec)
 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
