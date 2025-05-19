@@ -41,11 +41,8 @@ def preprocessar_imagem(imagem):
     img = img.astype('float32') / 255.0
     return img
 
-def freq_spec(image, threshold, add_noise, corner=0):
-    threshold = threshold/100
-    
-    f = np.fft.fft2(image)
-    fshift = np.fft.fftshift(f)
+def freq_spec(fshift, image, threshold_percent, add_noise, corner=0):
+    threshold = threshold_percent/100
 
     if add_noise:
         rows, cols = image.shape
@@ -77,7 +74,7 @@ def freq_spec(image, threshold, add_noise, corner=0):
         else:
             blur_patch(fshift, rows - noise_size, cols - noise_size)
 
-    magnitude_spectrum = 20 * np.log(np.abs(fshift) + 1)
+    magnitude_spectrum = 20 * np.log(np.abs(fshift) + 1
     magnitude_spectrum_norm = cv2.normalize(magnitude_spectrum, None, 0, 255, cv2.NORM_MINMAX)
 
     return fshift, magnitude_spectrum_norm.astype(np.uint8)
@@ -292,16 +289,16 @@ if arquivo_imagem:
                     modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5, add_noise=False, corner=corner)
                 else:
                     modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold=5, add_noise=True, corner=corner)
-                
+
                 img_alterada = ifft(modified_fshift)
                 img_processada = preprocessar_imagem(img_alterada)
-                
+
                 predicao = st.session_state.modelo.predict(img_processada[np.newaxis, ...])
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
 
                 heatmap = gerar_heatmap(st.session_state.modelo, mag_spec)
-                
+
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
                 with col1:
@@ -311,13 +308,13 @@ if arquivo_imagem:
                 with col3:
                     mag_spec_rgb = cv2.cvtColor(mag_spec, cv2.COLOR_GRAY2RGB)
                     mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
-                    
+
                     mag_spec_pil = Image.fromarray(mag_spec_rgba)
                     heatmap_pil = Image.fromarray(heatmap)
-                    
+
                     overlay_pil = Image.alpha_composite(mag_spec_pil, heatmap_pil)
                     overlay_rgb = overlay_pil.convert('RGB')
-                    
+
                     st.image(overlay_rgb, caption="Mapa de Ativação sobre Espectro")
 
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
