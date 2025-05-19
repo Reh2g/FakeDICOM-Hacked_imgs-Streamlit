@@ -82,46 +82,77 @@ def freq_spec(fshift, image, threshold_percent, add_noise, corner):
     return fshift, magnitude_spectrum_norm.astype(np.uint8)
 
 def gerar_heatmap(model, sample_image):
-    sample_image_resized = cv2.resize(sample_image, (224, 224))
-    if len(sample_image_resized.shape) == 2:
-        sample_image_resized = sample_image_resized[..., np.newaxis]
+    sample_image_exp = np.expand_dims(sample_image, axis=0)
 
-    sample_image_resized = sample_image_resized.astype('float32') / 255.0
-    sample_image_exp = np.expand_dims(sample_image_resized, axis=0)
-
-    camadas_conv = [layer.name for layer in model.layers if isinstance(layer, tf.keras.layers.Conv2D)]
-    ultima_conv = camadas_conv[-1] if camadas_conv else None
-
-    intermediate_model = tf.keras.models.Model(inputs=model.input, outputs=model.get_layer(ultima_conv).output)
+    # Obtem as ativações da última camada convolucional
+    intermediate_model = tf.keras.models.Model(inputs=model.input, outputs=model.get_layer('conv_pw_13_relu').output)
     activations = intermediate_model.predict(sample_image_exp)
+    activations = tf.convert_to_tensor(activations)
 
     predictions = model.predict(sample_image_exp)
 
     with tf.GradientTape() as tape:
-        iterate = tf.keras.models.Model([model.input], [model.output, model.get_layer(ultima_conv).output])
+        # Cria um modelo que nos dê a saída do modelo e as ativações da última camada convolucional
+        iterate = tf.keras.models.Model([model.input], [model.output, model.get_layer('conv_pw_13_relu').output])
         model_out, last_conv_layer = iterate(sample_image_exp)
+        
+        # Pegua a saída da classe predita
         class_out = model_out[:, np.argmax(model_out[0])]
+        
+        # Registra as operações a serem diferenciadas
         tape.watch(last_conv_layer)
+        
+        # Calcula os gradientes
         grads = tape.gradient(class_out, last_conv_layer)
 
+    # Verifica se os gradientes foram calculados corretamente
+    if grads is None:
+        raise ValueError('Gradients could not be computed. Check the model and layer names.')
+    
+    # Média dos gradientes sobre as dimensões espaciais
     pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+    
+    # Regularização dos gradientes
     pooled_grads = tf.where(pooled_grads == 0, tf.ones_like(pooled_grads) * 1e-10, pooled_grads)
-
+    
+    # Multiplique as ativações pelos gradientes ponderados e tire a média
     heatmap = tf.reduce_mean(tf.multiply(pooled_grads, last_conv_layer[0]), axis=-1)
 
-    heatmap = np.maximum(heatmap, 0)
-    heatmap /= np.max(heatmap) if np.max(heatmap) != 0 else 1
+    # Normaliza o heatmap se possível
+    min_value = np.min(heatmap)
+    
+    # Normaliza o heatmap se possível
+    max_value = np.max(heatmap)
 
+    # Aplica ReLU para garantir que os valores sejam não-negativos
+    heatmap = (heatmap - min_value) / (max_value - min_value)
+    heatmap = np.asarray(heatmap)
+    heatmap = (heatmap - 1) * (-1)
+    
+    # Redimensiona o heatmap para o tamanho da imagem de entrada
     heatmap_resized = cv2.resize(heatmap, (sample_image.shape[1], sample_image.shape[0]))
     heatmap_resized = np.uint8(255 * heatmap_resized)
-
+    
+    # Aplica um mapa de cores
     heatmap_colored = cm.jet(heatmap_resized)[:, :, :3]
     heatmap_colored = np.uint8(heatmap_colored * 255)
-
+    
+    # Cria um canal alfa a partir do heatmap redimensionado
     alpha_channel = np.uint8(heatmap_resized)
     heatmap_colored_with_alpha = np.dstack((heatmap_colored, alpha_channel))
-
-    return heatmap_colored_with_alpha
+    
+    # Converte a imagem original para uint8 e RGBA
+    sample_image_uint8 = np.uint8(255 * np.squeeze(sample_image))
+#   image_rgb = cv2.cvtColor(sample_image_uint8, cv2.COLOR_GRAY2RGB)
+#   image_rgba = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2RGBA)
+    image_rgba = cv2.cvtColor(sample_image_uint8, cv2.COLOR_RGB2RGBA)
+    
+    # Combina a imagem original com o heatmap
+    alpha_factor = alpha_channel / 255.0
+    for c in range(0, 3):
+        image_rgba[..., c] = image_rgba[..., c] * (1 - alpha_factor) + heatmap_colored[..., c] * alpha_factor
+    
+    return image_rgba
 
 def criptografar_imagem(fshift, aes_key):
     inicio = time.perf_counter()
@@ -271,7 +302,7 @@ if arquivo_imagem:
             st.image(imagem, caption="Imagem Original", use_container_width=True)
         with col2:
             st.image(mag_spec_norm, caption="Espectro de Frequência", use_container_width=True)
-
+    
         st.markdown("### 🎯 Simular Ataque em Região Específica")
         cols = st.columns(4)
         corners = {
@@ -280,40 +311,30 @@ if arquivo_imagem:
             "Inferior Esquerdo": 2,
             "Inferior Direito": 3
         }
-
+    
         for i, (label, corner) in enumerate(corners.items()):
             if cols[i].button(label):
                 modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=0.1, add_noise=True, corner=corner)
+                img_hacked = ifft(modified_fshift)
 
-                img_alterada = ifft(modified_fshift)
-                img_processada = preprocessar_imagem(img_alterada)
+                sample_image_exp = preprocessar_imagem(mag_spec)
 
-                predicao = modelo_MobileNet.predict(img_processada[np.newaxis, ...])
+                predicao = modelo_MobileNet.predict(sample_image_exp[np.newaxis, ...])
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
-
-                heatmap = gerar_heatmap(modelo_MobileNet, mag_spec)
-
-                st.markdown("---")
+                
+                heatmap = gerar_heatmap(modelo_MobileNet, sample_image_exp)
+    
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.image(img_alterada, caption="Imagem Modificada")
+                    st.image(img_hacked, caption="Imagem Retransformada (IFFT)", use_container_width=True)
                 with col2:
-                    st.image(mag_spec, caption="Espectro Alterado")
+                    st.image(sample_image_exp, caption="Entrada da CNN", use_container_width=True)
                 with col3:
-                    mag_spec_rgb = cv2.cvtColor(mag_spec, cv2.COLOR_GRAY2RGB)
-                    mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
-
-                    mag_spec_pil = Image.fromarray(mag_spec_rgba)
-                    heatmap_pil = Image.fromarray(heatmap)
-
-                    overlay_pil = Image.alpha_composite(mag_spec_pil, heatmap_pil)
-                    overlay_rgb = overlay_pil.convert('RGB')
-
-                    st.image(overlay_rgb, caption="Mapa de Ativação sobre Espectro")
-
+                    st.image(heatmap, caption="Mapa de Ativação", use_container_width=True)
+    
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
-                    f"(Confiança: {confianca*100:.2f}%)")
+                            f"(Confiança: {confianca*100:.2f}%)")
 
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
