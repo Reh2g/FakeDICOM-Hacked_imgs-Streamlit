@@ -41,7 +41,7 @@ def preprocessar_imagem(imagem):
     img = img.astype('float32') / 255.0
     return img
 
-def freq_spec(fshift, image, threshold_percent=5, add_noise, corner=0):
+def freq_spec(fshift, image, threshold_percent=5, add_noise=True, corner=0):
     threshold = threshold_percent/100
 
     if add_noise:
