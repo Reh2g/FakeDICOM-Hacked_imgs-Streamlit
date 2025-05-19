@@ -285,10 +285,7 @@ if arquivo_imagem:
 
         for i, (label, corner) in enumerate(corners.items()):
             if cols[i].button(label):
-                if corner == 0:
-                    modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=5, add_noise=False, corner=corner)
-                else:
-                    modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=5, add_noise=True, corner=corner)
+                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=5, add_noise=False, corner=corner)
 
                 img_alterada = ifft(modified_fshift)
                 img_processada = preprocessar_imagem(img_alterada)
