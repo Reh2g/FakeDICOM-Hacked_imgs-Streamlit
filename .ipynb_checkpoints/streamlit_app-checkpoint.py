@@ -89,32 +89,24 @@ def gerar_heatmap(model, sample_image):
     sample_image_resized = sample_image_resized.astype('float32') / 255.0
     sample_image_exp = np.expand_dims(sample_image_resized, axis=0)
 
-    last_conv_layer_name = 'conv_pw_13_relu'
+    camadas_conv = [layer.name for layer in model.layers if isinstance(layer, tf.keras.layers.Conv2D)]
+    ultima_conv = camadas_conv[-1] if camadas_conv else None
 
-    try:
-        intermediate_model = tf.keras.models.Model(
-            inputs=model.input,
-            outputs=model.get_layer(last_conv_layer_name).output
-        )
-    except ValueError:
-        raise ValueError(f"Camada {last_conv_layer_name} não encontrada no modelo. Verifique o nome da camada.")
+    intermediate_model = tf.keras.models.Model(inputs=model.input, outputs=model.get_layer(ultima_conv).output)
+    activations = intermediate_model.predict(sample_image_exp)
+
+    predictions = model.predict(sample_image_exp)
 
     with tf.GradientTape() as tape:
-        iterate = tf.keras.models.Model(
-            [model.input],
-            [model.output, model.get_layer(last_conv_layer_name).output]
-        )
+        iterate = tf.keras.models.Model([model.input], [model.output, model.get_layer(ultima_conv).output])
         model_out, last_conv_layer = iterate(sample_image_exp)
-        class_out = model_out[:, tf.argmax(model_out[0])]
+        class_out = model_out[:, np.argmax(model_out[0])]
         tape.watch(last_conv_layer)
-
         grads = tape.gradient(class_out, last_conv_layer)
-
-    if grads is None:
-        raise ValueError("Não foi possível calcular os gradientes. Verifique a imagem ou o modelo.")
 
     pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
     pooled_grads = tf.where(pooled_grads == 0, tf.ones_like(pooled_grads) * 1e-10, pooled_grads)
+
     heatmap = tf.reduce_mean(tf.multiply(pooled_grads, last_conv_layer[0]), axis=-1)
 
     heatmap = np.maximum(heatmap, 0)
@@ -126,7 +118,7 @@ def gerar_heatmap(model, sample_image):
     heatmap_colored = cm.jet(heatmap_resized)[:, :, :3]
     heatmap_colored = np.uint8(heatmap_colored * 255)
 
-    alpha_channel = heatmap_resized
+    alpha_channel = np.uint8(heatmap_resized)
     heatmap_colored_with_alpha = np.dstack((heatmap_colored, alpha_channel))
 
     return heatmap_colored_with_alpha
@@ -291,17 +283,16 @@ if arquivo_imagem:
 
         for i, (label, corner) in enumerate(corners.items()):
             if cols[i].button(label):
-                fshift_clone = np.copy(fshift)
-                modified_fshift, mag_spec = freq_spec(fshift_clone, imagem, threshold_percent=5.0, add_noise=True, corner=corner)
+                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=0.1, add_noise=True, corner=corner)
 
                 img_alterada = ifft(modified_fshift)
                 img_processada = preprocessar_imagem(img_alterada)
-                
+
                 predicao = modelo_MobileNet.predict(img_processada[np.newaxis, ...])
                 classe = np.argmax(predicao)
                 confianca = predicao[0][classe]
-                
-                heatmap = gerar_heatmap(modelo_MobileNet, img_processada)
+
+                heatmap = gerar_heatmap(modelo_MobileNet, mag_spec)
 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
@@ -310,15 +301,15 @@ if arquivo_imagem:
                 with col2:
                     st.image(mag_spec, caption="Espectro Alterado")
                 with col3:
-                    heatmap_resized = cv2.resize(heatmap, (mag_spec.shape[1], mag_spec.shape[0]))
-                    heatmap_pil = Image.fromarray(heatmap_resized).convert("RGBA")
-                    
                     mag_spec_rgb = cv2.cvtColor(mag_spec, cv2.COLOR_GRAY2RGB)
-                    mag_spec_rgba = Image.fromarray(mag_spec_rgb).convert("RGBA")
-                    
-                    overlay_pil = Image.alpha_composite(mag_spec_rgba, heatmap_pil)
+                    mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
+
+                    mag_spec_pil = Image.fromarray(mag_spec_rgba)
+                    heatmap_pil = Image.fromarray(heatmap)
+
+                    overlay_pil = Image.alpha_composite(mag_spec_pil, heatmap_pil)
                     overlay_rgb = overlay_pil.convert('RGB')
-                    
+
                     st.image(overlay_rgb, caption="Mapa de Ativação sobre Espectro")
 
                 st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} "
