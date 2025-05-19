@@ -18,8 +18,8 @@ import time
 import os
 
 # ----------------- MODELO -----------------
-model_path = 'Modelos/model_MobileNet_01p100.keras'
-#model_path = 'Modelos/model_MobileNet_5p100.keras'
+#model_path = 'Modelos/model_MobileNet_01p100.keras'
+model_path = 'Modelos/model_MobileNet_5p100.keras'
 
 if not os.path.exists(model_path):
     raise FileNotFoundError(f"Modelo não encontrado em: {os.path.abspath(model_path)}")
