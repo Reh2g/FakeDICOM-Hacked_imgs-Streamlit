@@ -294,6 +294,8 @@ if arquivo_imagem:
 
                 heatmap = gerar_heatmap(modelo_MobileNet, mag_spec)
 
+                st.text(mag_spec)
+
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
                 with col1:
