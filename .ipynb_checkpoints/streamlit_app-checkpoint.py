@@ -18,8 +18,8 @@ import time
 import os
 
 # ----------------- MODELO -----------------
-#model_path = 'Modelos/model_MobileNet_01p100.keras'
-model_path = 'Modelos/model_MobileNet_5p100.keras'
+model_path = 'Modelos/model_MobileNet_01p100.keras'
+#model_path = 'Modelos/model_MobileNet_5p100.keras'
 
 if not os.path.exists(model_path):
     raise FileNotFoundError(f"Modelo não encontrado em: {os.path.abspath(model_path)}")
@@ -43,7 +43,7 @@ def preprocessar_imagem(imagem):
     img = img.astype('float32') / 255.0
     return img
 
-def freq_spec(fshift, image, threshold_percent=5, add_noise=True, corner=0):
+def freq_spec(fshift, image, threshold_percent, add_noise, corner):
     threshold = threshold_percent/100
 
     if add_noise:
