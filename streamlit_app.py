@@ -261,69 +261,69 @@ if arquivo_imagem:
 # ----- INICIAR CNN -----
     if st.button("Iniciar CNN"):
         st.session_state.cnn_ativa = True
-
-    if st.session_state.cnn_ativa:
-        st.subheader("🔍 Análise de Segurança com MobileNet")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.image(imagem, caption="Imagem Original", use_container_width=True)
-        with col2:
-            st.image(mag_spec_norm, caption="Espectro de Frequência", use_container_width=True)
-
-        st.markdown("### 🎯 Simular Ataque em Região Específica")
-        cols = st.columns(4)
-        corners = {
-            "Superior Esquerdo": 0,
-            "Superior Direito": 1,
-            "Inferior Esquerdo": 2,
-            "Inferior Direito": 3
-        }
-
-        for i, (label, corner) in enumerate(corners.items()):
-            if cols[i].button(label):
-                modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=0.1, add_noise=True, corner=corner)
-
-                img_alterada = ifft(modified_fshift)
-                img_processada = preprocessar_imagem(img_alterada)
-
-                predicao = modelo_MobileNet.predict(img_processada[np.newaxis, ...])
-                classe = np.argmax(predicao)
-                confianca = predicao[0][classe]
-
-                heatmap = gerar_heatmap(modelo_MobileNet, mag_spec)
-
-                if corner == 0:
-                    rotated_heatmap = heatmap
-                elif corner == 1:
-                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
-                elif corner == 2:
-                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
-                else:
-                    rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
-
-                st.markdown("---")
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.image(img_alterada, caption="Imagem Modificada")
-                with col2:
-                    st.image(mag_spec, caption="Espectro Alterado")
-                with col3:
-                    mag_spec_rgb = cv2.cvtColor(mag_spec, cv2.COLOR_GRAY2RGB)
-                    mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
-
-                    mag_spec_pil = Image.fromarray(mag_spec_rgba)
-                    heatmap_pil = Image.fromarray(rotated_heatmap)
-
-                    overlay_pil = Image.alpha_composite(mag_spec_pil, heatmap_pil)
-                    overlay_rgb = overlay_pil.convert('RGB')
-
-                    st.image(overlay_rgb, caption="Mapa de Ativação sobre Espectro")
-
-                st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} ")
-#                   f"(Confiança: {confianca*100:.2f}%)")
-
+        if st.session_state.cnn_ativa:
+            st.subheader("🔍 Análise de Segurança com MobileNet")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.image(imagem, caption="Imagem Original", use_container_width=True)
+            with col2:
+                st.image(mag_spec_norm, caption="Espectro de Frequência", use_container_width=True)
+    
+            st.markdown("### 🎯 Simular Ataque em Região Específica")
+            cols = st.columns(4)
+            corners = {
+                "Superior Esquerdo": 0,
+                "Superior Direito": 1,
+                "Inferior Esquerdo": 2,
+                "Inferior Direito": 3
+            }
+    
+            for i, (label, corner) in enumerate(corners.items()):
+                if cols[i].button(label):
+                    modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=0.1, add_noise=True, corner=corner)
+    
+                    img_alterada = ifft(modified_fshift)
+                    img_processada = preprocessar_imagem(img_alterada)
+    
+                    predicao = modelo_MobileNet.predict(img_processada[np.newaxis, ...])
+                    classe = np.argmax(predicao)
+                    confianca = predicao[0][classe]
+    
+                    heatmap = gerar_heatmap(modelo_MobileNet, mag_spec)
+    
+                    if corner == 0:
+                        rotated_heatmap = heatmap
+                    elif corner == 1:
+                        rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
+                    elif corner == 2:
+                        rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                    else:
+                        rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
+    
+                    st.markdown("---")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.image(img_alterada, caption="Imagem Modificada")
+                    with col2:
+                        st.image(mag_spec, caption="Espectro Alterado")
+                    with col3:
+                        mag_spec_rgb = cv2.cvtColor(mag_spec, cv2.COLOR_GRAY2RGB)
+                        mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
+    
+                        mag_spec_pil = Image.fromarray(mag_spec_rgba)
+                        heatmap_pil = Image.fromarray(rotated_heatmap)
+    
+                        overlay_pil = Image.alpha_composite(mag_spec_pil, heatmap_pil)
+                        overlay_rgb = overlay_pil.convert('RGB')
+    
+                        st.image(overlay_rgb, caption="Mapa de Ativação sobre Espectro")
+    
+                    st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} ")
+    #                   f"(Confiança: {confianca*100:.2f}%)")
+    
+                    st.image("acuracia_porc_bytes.png")
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
-st.caption("Projeto desenvolvido por Gabriel N. Missima, Vinicius A. Pedro, Carlos M. H. Chinen")
+st.caption("Projeto desenvolvido por Gabriel N. Missima, Carlos M. H. Chinen, Vinicius A. Pedro")
 st.caption("Orientador: Prof. Dr. Paulo Sérgio Rodrigues")
