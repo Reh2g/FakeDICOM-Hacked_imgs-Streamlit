@@ -261,6 +261,7 @@ if arquivo_imagem:
 # ----- INICIAR CNN -----
     if st.button("Iniciar CNN"):
         st.session_state.cnn_ativa = True
+    try:
         if st.session_state.cnn_ativa:
             st.subheader("🔍 Análise de Segurança com MobileNet")
             
@@ -323,6 +324,8 @@ if arquivo_imagem:
     #                   f"(Confiança: {confianca*100:.2f}%)")
     
                     st.image("acuracia_porc_bytes.png")
+    except Exception as e:
+        print(e)
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
 st.caption("Projeto desenvolvido por Gabriel N. Missima, Carlos M. H. Chinen, Vinicius A. Pedro")
