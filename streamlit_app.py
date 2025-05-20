@@ -163,6 +163,12 @@ def ifft(fshift):
     return imagem_restaurada_uint8
 
 # ----------------- INTERFACE -----------------
+st.set_page_config(
+    page_title="FakeDICOM",
+    # layout="wide",  # opções: "centered" (padrão) ou "wide"
+    # initial_sidebar_state="expanded"
+)
+
 image = Image.open("banner.jpg")
 st.image(image, use_container_width =True)
 
@@ -237,11 +243,15 @@ if arquivo_imagem:
 
 # ----- DESCRIPTOGRAFIA -----
     st.header("🔓 Descriptografia AES!")
-    st.markdown('<h4>🔑 Insira a Chave para Descriptografia</h4>', unsafe_allow_html=True)
-    chave_descript = st.file_uploader("Chave", type=["pem"])
 
-    st.markdown('<h4>🗃️ Insira o Arquivo Criptografado</h4>', unsafe_allow_html=True)
-    enc_file = st.file_uploader("Arquivo Criptografado", type=["enc"])
+    col1, col2 = st.columns(2)    
+    with col1:
+        st.markdown('<h6>🔑 Insira a Chave para Descriptografia</h6>', unsafe_allow_html=True)
+        chave_descript = st.file_uploader("", type=["pem"], key="chave")
+    
+    with col2:
+        st.markdown('<h6>🗃️ Insira o Arquivo Criptografado</h6>', unsafe_allow_html=True)
+        enc_file = st.file_uploader("", type=["enc"], key="arquivo")
 
 
     if chave_descript and enc_file:
