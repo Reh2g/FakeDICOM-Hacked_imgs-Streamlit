@@ -200,6 +200,8 @@ if arquivo_imagem:
     imagem_upload = Image.open(arquivo_imagem)
     imagem_np = np.array(imagem_upload)
     imagem = cv2.resize(imagem_np, (512, 512), interpolation=cv2.INTER_AREA)
+    img_hash = hash(imagem.tobytes())
+    random.seed(img_hash)
     f = np.fft.fft2(imagem)
     fshift = np.fft.fftshift(f)
 
@@ -264,10 +266,9 @@ if arquivo_imagem:
     st.markdown("---")
     
 # ----- INICIAR CNN -----
-    if st.button("Iniciar CNN"):
-        st.session_state.cnn_ativa = True
-
     try:
+        if st.button("Iniciar CNN"):
+            st.session_state.cnn_ativa = True
         if st.session_state.cnn_ativa:
             st.subheader("🔍 Análise de Segurança com MobileNet")
 
@@ -279,20 +280,28 @@ if arquivo_imagem:
 
             st.markdown("### 🎯 Selecionar Região para Análise")
             opcao_ruido = st.radio("Deseja aplicar ruído na imagem?", ("Não", "Sim"))
-
-            canto = st.selectbox("Selecione o canto para análise:", ["Superior Esquerdo", "Superior Direito", "Inferior Esquerdo", "Inferior Direito"])
-
-            corners_dict = {
-                "Superior Esquerdo": 0,
-                "Superior Direito": 1,
-                "Inferior Esquerdo": 2,
-                "Inferior Direito": 3
-            }
-
             aplicar_ruido = opcao_ruido == "Sim"
 
+            # Valor padrão seguro (não será usado se aplicar_ruido = False)
+            canto_escolhido = 0
+
+            if aplicar_ruido:
+                canto = st.selectbox("Selecione o canto para análise:", [
+                    "Superior Esquerdo",
+                    "Superior Direito",
+                    "Inferior Esquerdo",
+                    "Inferior Direito"
+                ])
+
+                canto_escolhido = {
+                    "Superior Esquerdo": 0,
+                    "Superior Direito": 1,
+                    "Inferior Esquerdo": 2,
+                    "Inferior Direito": 3
+                }[canto]
+
             modified_fshift, mag_spec_modificado = freq_spec(
-                fshift.copy(), imagem, threshold_percent=0.1, add_noise=aplicar_ruido, corner=corners_dict[canto]
+                fshift.copy(), imagem, threshold_percent=0.1, add_noise=aplicar_ruido, corner=canto_escolhido
             )
 
             # Imagem restaurada (alterada ou não) para exibição
@@ -320,7 +329,7 @@ if arquivo_imagem:
                     1: cv2.ROTATE_90_CLOCKWISE,
                     2: cv2.ROTATE_90_COUNTERCLOCKWISE,
                     3: cv2.ROTATE_180
-                }[corners_dict[canto]]
+                }[canto_escolhido]
 
                 if rotation_code is not None:
                     rotated_heatmap = cv2.rotate(heatmap, rotation_code)
@@ -338,8 +347,32 @@ if arquivo_imagem:
                 with col3:
                     st.image(overlay_pil.convert('RGB'), caption="Mapa de Ativação sobre Espectro")
             else:
+                heatmap = gerar_heatmap(modelo_MobileNet, mag_spec_modificado)
+
+                # Prepara espectro como imagem RGBA
+                mag_spec_rgb = cv2.cvtColor(mag_spec_modificado, cv2.COLOR_GRAY2RGB)
+                mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
+                espectro_pil = Image.fromarray(mag_spec_rgba)
+
+                # Lista de possíveis rotações
+                rotation_codes = [None, cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_90_COUNTERCLOCKWISE, cv2.ROTATE_180]
+
+                # Reaplica a mesma seed baseada na imagem, para manter a aleatoriedade idêntica
+                random.seed(img_hash)
+
+                # Aplicar 4 heatmaps com rotações aleatórias consistentes
+                for _ in range(4):
+                    rotation = random.choice(rotation_codes)
+                    if rotation is not None:
+                        rotated_heatmap = cv2.rotate(heatmap, rotation)
+                    else:
+                        rotated_heatmap = heatmap.copy()
+
+                    heatmap_pil = Image.fromarray(rotated_heatmap)
+                    espectro_pil = Image.alpha_composite(espectro_pil, heatmap_pil)
+
                 with col3:
-                    st.image(np.zeros_like(imagem), caption="(Sem ruído detectado)")
+                    st.image(espectro_pil.convert('RGB'), caption="Mapa de Ativação (sem ruído)")
 
             # Diagnóstico final
             st.markdown(f"**Diagnóstico:** {'🚨 Com Ruído' if opcao_ruido == 'Sim' else '✅ Normal'}") 
@@ -360,9 +393,9 @@ if arquivo_imagem:
             predicao = modelo_MobileNet.predict(img_processada[np.newaxis, ...])
             classe = np.argmax(predicao)
             confianca = predicao[0][classe]
-
     except Exception as e:
         st.error(f"Erro: {e}")
+
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
 st.caption("Projeto desenvolvido por Gabriel N. Missima, Carlos M. H. Chinen, Vinicius A. Pedro")
