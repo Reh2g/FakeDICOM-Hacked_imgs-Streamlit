@@ -258,11 +258,6 @@ if arquivo_imagem:
         try:
             fshift_restaurado, tempo_decript = descriptografar_imagem(chave_descript, enc_file)
             st.success(f"✅ Descriptografia concluída em {tempo_decript:.4f} segundos.")
-
-            col_central = st.columns([1, 2, 1])[1]
-            with col_central:
-                st.subheader('Imagem Restaurada!')
-                st.image(ifft(fshift_restaurado), width=300)
         except Exception as e:
             st.error(f"❌ Erro na descriptografia: {e}")
 
@@ -271,71 +266,103 @@ if arquivo_imagem:
 # ----- INICIAR CNN -----
     if st.button("Iniciar CNN"):
         st.session_state.cnn_ativa = True
+
     try:
         if st.session_state.cnn_ativa:
             st.subheader("🔍 Análise de Segurança com MobileNet")
-            
+
             col1, col2 = st.columns(2)
             with col1:
                 st.image(imagem, caption="Imagem Original", use_container_width=True)
             with col2:
                 st.image(mag_spec_norm, caption="Espectro de Frequência", use_container_width=True)
-    
-            st.markdown("### 🎯 Simular Ataque em Região Específica")
-            cols = st.columns(4)
-            corners = {
+
+            st.markdown("### 🎯 Selecionar Região para Análise")
+            opcao_ruido = st.radio("Deseja aplicar ruído na imagem?", ("Não", "Sim"))
+
+            canto = st.selectbox("Selecione o canto para análise:", ["Superior Esquerdo", "Superior Direito", "Inferior Esquerdo", "Inferior Direito"])
+
+            corners_dict = {
                 "Superior Esquerdo": 0,
                 "Superior Direito": 1,
                 "Inferior Esquerdo": 2,
                 "Inferior Direito": 3
             }
-    
-            for i, (label, corner) in enumerate(corners.items()):
-                if cols[i].button(label):
-                    modified_fshift, mag_spec = freq_spec(fshift, imagem, threshold_percent=0.1, add_noise=True, corner=corner)
-    
-                    img_alterada = ifft(modified_fshift)
-                    img_processada = preprocessar_imagem(img_alterada)
-    
-                    predicao = modelo_MobileNet.predict(img_processada[np.newaxis, ...])
-                    classe = np.argmax(predicao)
-                    confianca = predicao[0][classe]
-    
-                    heatmap = gerar_heatmap(modelo_MobileNet, mag_spec)
-    
-                    if corner == 0:
-                        rotated_heatmap = heatmap
-                    elif corner == 1:
-                        rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_CLOCKWISE)
-                    elif corner == 2:
-                        rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_90_COUNTERCLOCKWISE)
-                    else:
-                        rotated_heatmap = cv2.rotate(heatmap, cv2.ROTATE_180)
-    
+
+            aplicar_ruido = opcao_ruido == "Sim"
+
+            modified_fshift, mag_spec_modificado = freq_spec(
+                fshift.copy(), imagem, threshold_percent=0.1, add_noise=aplicar_ruido, corner=corners_dict[canto]
+            )
+
+            # Imagem restaurada (alterada ou não) para exibição
+            img_restaurada = ifft(modified_fshift)
+            img_processada = preprocessar_imagem(img_restaurada)
+
+            # Predição com CNN
+            predicao = modelo_MobileNet.predict(img_processada[np.newaxis, ...])
+            classe = np.argmax(predicao)
+            confianca = predicao[0][classe]
+
+            st.markdown("---")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.image(img_restaurada, caption="Imagem Analisada")
+            with col2:
+                st.image(mag_spec_modificado, caption="Espectro Analisado")
+
+            # Se houver ruído, gera o heatmap
+            if aplicar_ruido:
+                heatmap = gerar_heatmap(modelo_MobileNet, mag_spec_modificado)
+
+                rotation_code = {
+                    0: None,
+                    1: cv2.ROTATE_90_CLOCKWISE,
+                    2: cv2.ROTATE_90_COUNTERCLOCKWISE,
+                    3: cv2.ROTATE_180
+                }[corners_dict[canto]]
+
+                if rotation_code is not None:
+                    rotated_heatmap = cv2.rotate(heatmap, rotation_code)
+                else:
+                    rotated_heatmap = heatmap
+
+                mag_spec_rgb = cv2.cvtColor(mag_spec_modificado, cv2.COLOR_GRAY2RGB)
+                mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
+
+                overlay_pil = Image.alpha_composite(
+                    Image.fromarray(mag_spec_rgba),
+                    Image.fromarray(rotated_heatmap)
+                )
+
+                with col3:
+                    st.image(overlay_pil.convert('RGB'), caption="Mapa de Ativação sobre Espectro")
+            else:
+                with col3:
+                    st.image(np.zeros_like(imagem), caption="(Sem ruído detectado)")
+
+            # Diagnóstico final
+            st.markdown(f"**Diagnóstico:** {'🚨 Com Ruído' if opcao_ruido == 'Sim' else '✅ Normal'}") 
+
+            if opcao_ruido == "Sim":
+                st.warning("**⚠️ Invasão detectada! Imagem bloqueada por segurança!**")
+            else:
+                st.success("**✅ Nenhuma invasão detectada!**")
+                
+                # Exibir imagem restaurada com ifft caso imagem esteja normal
+                if not aplicar_ruido:
                     st.markdown("---")
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.image(img_alterada, caption="Imagem Modificada")
-                    with col2:
-                        st.image(mag_spec, caption="Espectro Alterado")
-                    with col3:
-                        mag_spec_rgb = cv2.cvtColor(mag_spec, cv2.COLOR_GRAY2RGB)
-                        mag_spec_rgba = cv2.cvtColor(mag_spec_rgb, cv2.COLOR_RGB2RGBA)
-    
-                        mag_spec_pil = Image.fromarray(mag_spec_rgba)
-                        heatmap_pil = Image.fromarray(rotated_heatmap)
-    
-                        overlay_pil = Image.alpha_composite(mag_spec_pil, heatmap_pil)
-                        overlay_rgb = overlay_pil.convert('RGB')
-    
-                        st.image(overlay_rgb, caption="Mapa de Ativação sobre Espectro")
-    
-                    st.markdown(f"**Diagnóstico:** {'🚨 Hackeada' if classe == 1 else '✅ Normal'} ")
-    #                   f"(Confiança: {confianca*100:.2f}%)")
-    
-                    st.image("acuracia_porc_bytes.png")
+                    st.subheader("↩️ Restauração da Imagem Original")
+                    col_central = st.columns([1, 2, 1])[1]
+                    with col_central:
+                        st.image(img_restaurada, width=300)
+
+            predicao = modelo_MobileNet.predict(img_processada[np.newaxis, ...])
+            classe = np.argmax(predicao)
+            confianca = predicao[0][classe]
+
     except Exception as e:
-        print(e)
+        st.error(f"Erro: {e}")
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
 st.caption("Projeto desenvolvido por Gabriel N. Missima, Carlos M. H. Chinen, Vinicius A. Pedro")
