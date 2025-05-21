@@ -388,7 +388,7 @@ if arquivo_imagem:
             classe = np.argmax(predicao)
             confianca = predicao[0][classe]
     except Exception as e:
-        st.error(f"Erro: {e}")
+        print(e)
 
 st.markdown("""<hr style="border:1px solid gray">""", unsafe_allow_html=True)
 st.caption("TCC - Ciência da Computação - FEI")
