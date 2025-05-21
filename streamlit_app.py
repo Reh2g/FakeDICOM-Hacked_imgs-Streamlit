@@ -168,7 +168,7 @@ def ifft(fshift):
 #     # layout="wide",  # opções: "centered" (padrão) ou "wide"
 #     # initial_sidebar_state="expanded"
 # )
-
+st.text('AAAAAAAAAAAAAAAAAAAAAA')
 image = Image.open("banner.jpg")
 st.image(image, use_container_width =True)
 
